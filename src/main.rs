@@ -1,7 +1,8 @@
 extern crate clap;
 
 use std::cmp;
-use std::process::Command;
+use std::fmt::{Display, Formatter};
+use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
 
@@ -14,13 +15,20 @@ const APP_AUTHOR: &'static str = env!("CARGO_PKG_AUTHORS");
 // Command constant
 const CMD_ARG_PARAMS: &'static str = "parameter";
 
+// Application result type
+type Result<'a, T> = std::result::Result<T, Error<'a>>;
+
 /// Main application entry point.
 fn main() {
     // Parse arguments
     let matches = parse_args();
 
     // Show the lock screen
-    lock(Some(&matches));
+    let result = lock(Some(&matches));
+    if result.is_err() {
+        eprintln!("{}\n{} will now quit", result.unwrap_err(), APP_NAME);
+        exit(1);
+    }
 }
 
 /// Parse all given arguments.
@@ -44,7 +52,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 /// Show the lock screen
 ///
 /// If `matches` are given, all parameters will be parsed accordingly.
-fn lock(matches: Option<&ArgMatches>) {
+fn lock<'a>(matches: Option<&ArgMatches>) -> Result<'a, ()> {
     // Create a list of arguments to add
     let mut args: Vec<String> = Vec::new();
 
@@ -53,11 +61,44 @@ fn lock(matches: Option<&ArgMatches>) {
         args = parse_i3_params(matches.unwrap());
     }
 
+    println!("Starting i3lock...");
+
     // Invoke i3lock
-    Command::new("i3lock")
+    let out = Command::new("i3lock")
         .args(args)
-        .spawn()
+        .output()
         .expect("Failed to invoke i3lock");
+
+    // Wait for i3lock to complete, handle non-zero status codes
+    if out.status.success() {
+        println!("i3lock exited successfully");
+    } else {
+        println!(
+            "i3lock exited with a non-zero status code (code: {})",
+            out.status.code().unwrap()
+        );
+    }
+
+    // Print stdout and stderr from i3lock if not empty
+    if !out.stdout.is_empty() {
+        println!("\ni3lock stdout:");
+        println!("==========");
+        println!("{}", String::from_utf8_lossy(&out.stdout));
+        println!("==========");
+    }
+    if !out.stderr.is_empty() {
+        println!("\ni3lock stderr:");
+        println!("==========");
+        println!("{}", String::from_utf8_lossy(&out.stderr));
+        println!("==========");
+    }
+
+    // Return with the proper result
+    if out.status.success() {
+        Ok(())
+    } else {
+        Err(Error::new("i3lock exited with a non-zero status code"))
+    }
 }
 
 /// Parse parameters that should be passed to i3lock if any matched.
@@ -112,4 +153,44 @@ fn parse_i3_params(matches: &ArgMatches) -> Vec<String> {
     }
 
     args
+}
+
+#[derive(Debug)]
+struct Error<'a> {
+    description: &'a str,
+    cause: Option<&'a std::error::Error>
+}
+
+impl<'a> Error<'a> {
+    /// New error instance, with the given `description`.
+    pub fn new(description: &'a str) -> Self {
+        Error {
+            description,
+            cause: None,
+        }
+    }
+
+//    /// New error instance, with the given `description` and `cause`.
+//    pub fn from(description: &'a str, cause: &'a std::error::Error) -> Self {
+//        Error {
+//            description,
+//            cause: Some(cause),
+//        }
+//    }
+}
+
+impl<'a> std::error::Error for Error<'a> {
+    fn description(&self) -> &str {
+        self.description
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        self.cause
+    }
+}
+
+impl<'a> Display for Error<'a> {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{} error: {}", APP_NAME, self.description)
+    }
 }

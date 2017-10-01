@@ -27,7 +27,11 @@ i3lock-slick -p color=ff0000 -p ignore-empty-password
 ```
 
 ## Requirements
+Usage requirements:
 * `i3lock`: i3lock itself
+
+Development requirements:
+* Rust 1.19
 
 ## License
 This project is released under the MIT license.
