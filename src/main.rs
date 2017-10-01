@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
+//use screenshot::get_screenshot;
 
 // Get application constants from Cargo
 const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -14,6 +15,7 @@ const APP_AUTHOR: &'static str = env!("CARGO_PKG_AUTHORS");
 
 // Command constant
 const CMD_ARG_PARAMS: &'static str = "parameter";
+const CMD_ARG_FAKE: &'static str = "fake";
 
 // Application result type
 type Result<'a, T> = std::result::Result<T, Error<'a>>;
@@ -46,6 +48,10 @@ fn parse_args<'a>() -> ArgMatches<'a> {
             .help("Pass an argument to i3lock")
             .multiple(true)
             .takes_value(true))
+        .arg(Arg::with_name(CMD_ARG_FAKE)
+            .short("f")
+            .long(CMD_ARG_FAKE)
+            .help("Don't invoke i3lock, print the command to stdout instead"))
         .get_matches()
 }
 
@@ -53,52 +59,66 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 ///
 /// If `matches` are given, all parameters will be parsed accordingly.
 fn lock<'a>(matches: Option<&ArgMatches>) -> Result<'a, ()> {
-    // Create a list of arguments to add
-    let mut args: Vec<String> = Vec::new();
+    // Build the command and it's arguments
+    let mut cmd: Vec<String> = vec![String::from("i3lock")];
+    let mut fake = false;
 
-    // Parse i3 parameters
-    if matches.is_some() {
-        args = parse_i3_params(matches.unwrap());
+    // Parse parameters
+    if let Some(matches) = matches {
+        cmd.append(&mut parse_i3_params(matches));
+
+        // Fake running i3lock
+        if matches.is_present(CMD_ARG_FAKE) {
+            fake = true;
+        }
     }
-
-    println!("Starting i3lock...");
 
     // Invoke i3lock
-    let out = Command::new("i3lock")
-        .args(args)
-        .output()
-        .expect("Failed to invoke i3lock");
+    if !fake {
+        println!("Starting i3lock...");
 
-    // Wait for i3lock to complete, handle non-zero status codes
-    if out.status.success() {
-        println!("i3lock exited successfully");
+        // Invoke i3lock
+        let mut args_iter = cmd.iter();
+        let out = Command::new(args_iter.next().unwrap())
+            .args(args_iter)
+            .output()
+            .expect("Failed to invoke i3lock");
+
+        // Wait for i3lock to complete, handle non-zero status codes
+        if out.status.success() {
+            println!("i3lock exited successfully");
+        } else {
+            println!(
+                "i3lock exited with a non-zero status code (code: {})",
+                out.status.code().unwrap()
+            );
+        }
+
+        // Print stdout and stderr from i3lock if not empty
+        if !out.stdout.is_empty() {
+            println!("\ni3lock stdout:");
+            println!("==========");
+            println!("{}", String::from_utf8_lossy(&out.stdout));
+            println!("==========");
+        }
+        if !out.stderr.is_empty() {
+            println!("\ni3lock stderr:");
+            println!("==========");
+            println!("{}", String::from_utf8_lossy(&out.stderr));
+            println!("==========");
+        }
+
+        // Return errors
+        if !out.status.success() {
+            return Err(Error::new("i3lock exited with a non-zero status code"));
+        }
+
     } else {
-        println!(
-            "i3lock exited with a non-zero status code (code: {})",
-            out.status.code().unwrap()
-        );
+        // Don't invoke i3lock, print the command to stdout instead
+        println!("{}", cmd.join(" "));
     }
 
-    // Print stdout and stderr from i3lock if not empty
-    if !out.stdout.is_empty() {
-        println!("\ni3lock stdout:");
-        println!("==========");
-        println!("{}", String::from_utf8_lossy(&out.stdout));
-        println!("==========");
-    }
-    if !out.stderr.is_empty() {
-        println!("\ni3lock stderr:");
-        println!("==========");
-        println!("{}", String::from_utf8_lossy(&out.stderr));
-        println!("==========");
-    }
-
-    // Return with the proper result
-    if out.status.success() {
-        Ok(())
-    } else {
-        Err(Error::new("i3lock exited with a non-zero status code"))
-    }
+    Ok(())
 }
 
 /// Parse parameters that should be passed to i3lock if any matched.
