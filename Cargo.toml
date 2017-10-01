@@ -1,0 +1,11 @@
+[package]
+name = "i3lock-slick"
+version = "0.0.1"
+authors = ["timvisee <timvisee@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/timvisee/i3lock-slick"
+repository = "https://github.com/timvisee/i3lock-slick.git"
+description = "A tool to make i3lock look slick"
+
+[dependencies]
