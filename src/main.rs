@@ -126,15 +126,16 @@ fn lock<'a>(matches: Option<&ArgMatches>) -> Result<'a, ()> {
 /// Returns a vector of strings with arguments to use when invoking i3lock.
 fn parse_i3_params(matches: &ArgMatches) -> Vec<String> {
     // Get all parameters
-    let params = matches
-        .values_of(CMD_ARG_PARAMS)
-        .unwrap();
+    let params = matches.values_of(CMD_ARG_PARAMS);
+    if params.is_none() {
+        return Vec::new();
+    }
 
     // Create a list of arguments to use
     let mut args: Vec<String> = Vec::new();
 
     // Process all i3 parameters
-    for param in params {
+    for param in params.unwrap() {
         // Split the parameter in parts
         let mut parts = param.splitn(2, '=');
 
