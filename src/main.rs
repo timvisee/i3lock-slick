@@ -1,11 +1,15 @@
 extern crate clap;
+extern crate image;
+extern crate tempdir;
 
 use std::cmp;
 use std::fmt::{Display, Formatter};
+use std::fs::File;
+use std::path::PathBuf;
 use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
-//use screenshot::get_screenshot;
+use tempdir::TempDir;
 
 // Get application constants from Cargo
 const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -25,8 +29,14 @@ fn main() {
     // Parse arguments
     let matches = parse_args();
 
+    // Create a temporary directory
+    let temp = TempDir::new(APP_NAME)
+        .expect("Failed to create temporary directory");
+
+    let screenshot = screenshot(&temp).unwrap();
+
     // Show the lock screen
-    let result = lock(Some(&matches));
+    let result = lock(Some(&matches), Some(screenshot));
     if result.is_err() {
         eprintln!("{}\n{} will now quit", result.unwrap_err(), APP_NAME);
         exit(1);
@@ -58,7 +68,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 /// Show the lock screen
 ///
 /// If `matches` are given, all parameters will be parsed accordingly.
-fn lock<'a>(matches: Option<&ArgMatches>) -> Result<'a, ()> {
+fn lock<'a>(matches: Option<&ArgMatches>, screenshot: Option<PathBuf>) -> Result<'a, ()> {
     // Build the command and it's arguments
     let mut cmd: Vec<String> = vec![String::from("i3lock")];
     let mut fake = false;
@@ -71,6 +81,15 @@ fn lock<'a>(matches: Option<&ArgMatches>) -> Result<'a, ()> {
         if matches.is_present(CMD_ARG_FAKE) {
             fake = true;
         }
+    }
+
+    // Configure to use the screenshot as lock image
+    match screenshot {
+        Some(file) => {
+            cmd.push("--image".into());
+            cmd.push(file.to_str().unwrap().into());
+        },
+        _ => {}
     }
 
     // Invoke i3lock
@@ -119,6 +138,51 @@ fn lock<'a>(matches: Option<&ArgMatches>) -> Result<'a, ()> {
     }
 
     Ok(())
+}
+
+/// Take a screenshot and save in the given temporary directory.
+///
+/// Returns a `Path` which references the saved screenshot.
+fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
+    // Determine the file path for the screenshot
+    let file = tempdir.path().join("i3lock-image.png");
+
+    // Invoke i3lock
+    println!("Taking screenshot...");
+    let out = Command::new("scrot")
+        .arg("-z")
+        .arg(file.to_str().unwrap())
+        .output()
+        .expect("Failed to invoke i3lock");
+
+    println!("Processing image...");
+    let img = image::open(&file).unwrap();
+
+    println!("Blurring...");
+    let img_dyn = img.blur(5.0);
+
+    println!("Saving image...");
+    let img_file = &mut File::create(&file).unwrap();
+    img_dyn.save(img_file, image::PNG).unwrap();
+
+    // Wait for i3lock to complete, handle non-zero status codes
+    if !out.status.success() {
+        println!(
+            "Failed to take screenshot (scrot status code: {})",
+            out.status.code().unwrap()
+        );
+
+        if !out.stderr.is_empty() {
+            println!("\nscrot stderr:");
+            println!("==========");
+            println!("{}", String::from_utf8_lossy(&out.stderr));
+            println!("==========");
+        }
+
+        return Err(Error::new("Failed to take screenshot"));
+    }
+
+    Ok(file)
 }
 
 /// Parse parameters that should be passed to i3lock if any matched.

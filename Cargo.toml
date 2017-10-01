@@ -9,4 +9,6 @@ repository = "https://github.com/timvisee/i3lock-slick.git"
 description = "A CLI tool to easily make i3lock look slick."
 
 [dependencies]
-clap = "2.26.2"
+clap = "2.26"
+image = "0.16.0"
+tempdir = "0.3"
