@@ -1,14 +1,15 @@
 extern crate clap;
-extern crate image;
 extern crate tempdir;
+
+mod img;
 
 use std::cmp;
 use std::fmt::{Display, Formatter};
-use std::fs::File;
 use std::path::PathBuf;
 use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
+use img::Img;
 use tempdir::TempDir;
 
 // Get application constants from Cargo
@@ -155,24 +156,16 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
         .output()
         .expect("Failed to invoke i3lock");
 
-    println!("Processing image...");
-    let mut img = image::open(&file).unwrap();
+    // Process the image
+    let img = img::Img::new(&file);
+    let mut edit = Img::new(&file).edit().unwrap();
 
-    println!("Blurring...");
-//    img = img.grayscale();
-//    img = img.huerotate(180);
-    img = img.brighten(-20);
-    img = img.blur(4.0);
+    println!("Bluring image...");
+    edit.blur();
 
-    println!("Saving image...");
-    let mut img_file = &mut File::create(&file);
-    if img_file.is_err() {
-        return Err(Error::new("Failed create file to save the processed image to"));
-    }
-
-    let img_out = img.save(img_file.as_mut().unwrap(), image::PNG);
-    if img_out.is_err() {
-        return Err(Error::new("Failed to save processed image"));
+    println!("Saving edited image...");
+    if let Err(_) = edit.save(&img) {
+        return Err(Error::new("Failed to save image"));
     }
 
     // Wait for i3lock to complete, handle non-zero status codes
@@ -251,7 +244,7 @@ fn parse_i3_params(matches: &ArgMatches) -> Vec<String> {
 }
 
 #[derive(Debug)]
-struct Error<'a> {
+pub struct Error<'a> {
     description: &'a str,
     cause: Option<&'a std::error::Error>
 }
