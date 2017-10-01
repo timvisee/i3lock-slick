@@ -1,15 +1,15 @@
 # i3lock-slick
-A tool to easily make i3lock look slick.
+A CLI tool to easily make i3lock look [slick](http://www.urbandictionary.com/define.php?term=slick).
 
 The concept if [i3lock](https://i3wm.org/i3lock/) is awesome, but it looks quite ugly by itself.  
 
 Projects like [i3lock-color](https://github.com/chrjguill/i3lock-color) allow visual customizations,
 but using these in a nice way is hard and requires additional scripts to be written.
 
-This tool makes using a blurred desktop as background in `i3lock` very easy,
+This tool makes things like a blurred desktop as background in `i3lock` very easy,
 along with many other styles.
 
-Invoking `i3lock-slick` parses all given arguments and immediately spawns `i3lock` accordingly with the proper configuration,
+Invoking `i3lock-slick` parses all given arguments and immediately spawns the lock screen accordingly with the proper configuration,
 unless a parameters changes this behaviour.
 This makes invoking and styling `i3lock` with a single command a piece of cake.
 

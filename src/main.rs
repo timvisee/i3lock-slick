@@ -11,7 +11,10 @@ const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const APP_DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
 const APP_AUTHOR: &'static str = env!("CARGO_PKG_AUTHORS");
 
-/// Main application entrypoint.
+// Command constant
+const CMD_ARG_PARAMS: &'static str = "parameter";
+
+/// Main application entry point.
 fn main() {
     // Parse arguments
     let matches = parse_args();
@@ -28,9 +31,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .version(APP_VERSION)
         .about(APP_DESCRIPTION)
         .author(APP_AUTHOR)
-        .arg(Arg::with_name("parameter")
+        .arg(Arg::with_name(CMD_ARG_PARAMS)
             .short("p")
-            .long("parameter")
+            .long(CMD_ARG_PARAMS)
             .value_name("ARGUMENT | ARGUMENT=VALUE")
             .help("Pass an argument to i3lock")
             .multiple(true)
@@ -63,49 +66,50 @@ fn lock(matches: Option<&ArgMatches>) {
 fn parse_i3_params(matches: &ArgMatches) -> Vec<String> {
     // Get all parameters
     let params = matches
-        .values_of("parameter")
+        .values_of(CMD_ARG_PARAMS)
         .unwrap();
 
-    let mut arg_params: Vec<String> = Vec::new();
+    // Create a list of arguments to use
+    let mut args: Vec<String> = Vec::new();
 
     // Process all i3 parameters
     for param in params {
         // Split the parameter in parts
         let mut parts = param.splitn(2, '=');
 
-        // Get the parameter part
-        let param_param = parts.next().unwrap();
-        let mut arg_parsed = String::new();
-        let mut arg_parsed_arg = String::new();
+        // Get the argument, define variables for the argument and a possible value
+        let part_arg = parts.next().unwrap();
+        let mut arg = String::new();
+        let mut val: Option<String> = None;
 
-        // Put one or two hyphens in front, if it doesn't have them yet
-        if !param_param.starts_with("-") {
-            for _ in 0..cmp::min(param_param.len(), 2) {
-                arg_parsed.push('-');
+        // Prefix 1 or 2 argument hyphens if missing
+        if !part_arg.starts_with("-") {
+            for _ in 0..cmp::min(part_arg.len(), 2) {
+                arg.push('-');
             }
         }
 
-        // Add the actual parameter 
-        arg_parsed.push_str(param_param);
+        // Append the actual argument after the hyphens
+        arg.push_str(part_arg);
 
-        // Parse the parameter argument if set
-        if let Some(param_arg_arg) = parts.next() {
-            // Determine whether to attach the argument with an equals sign,
-            // or whether to supply it detached value
-            if arg_parsed.len() <= 2 {
-                arg_parsed_arg.push_str(param_arg_arg);
+        // Parse argument values if set
+        if let Some(part_val) = parts.next() {
+            // Determine whether to attach the argument and value with an equals sign,
+            // or whether to separate them with a space.
+            if arg.len() <= 2 {
+                val = Some(part_val.into());
             } else {
-                arg_parsed.push('=');
-                arg_parsed.push_str(param_arg_arg);
+                arg.push('=');
+                arg.push_str(part_val);
             }
         }
 
-        // Add the arguments to the command list
-        arg_params.push(arg_parsed);
-        if !arg_parsed_arg.is_empty() {
-            arg_params.push(arg_parsed_arg);
+        // Push the arguments to the result
+        args.push(arg);
+        if val.is_some() {
+            args.push(val.unwrap());
         }
     }
 
-    arg_params
+    args
 }
