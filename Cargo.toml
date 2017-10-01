@@ -6,6 +6,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/timvisee/i3lock-slick"
 repository = "https://github.com/timvisee/i3lock-slick.git"
-description = "A tool to make i3lock look slick"
+description = "A tool to make i3lock look slick."
 
 [dependencies]
+clap = "2.26.2"
