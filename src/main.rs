@@ -156,14 +156,24 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
         .expect("Failed to invoke i3lock");
 
     println!("Processing image...");
-    let img = image::open(&file).unwrap();
+    let mut img = image::open(&file).unwrap();
 
     println!("Blurring...");
-    let img_dyn = img.blur(5.0);
+//    img = img.grayscale();
+//    img = img.huerotate(180);
+    img = img.brighten(-20);
+    img = img.blur(4.0);
 
     println!("Saving image...");
-    let img_file = &mut File::create(&file).unwrap();
-    img_dyn.save(img_file, image::PNG).unwrap();
+    let mut img_file = &mut File::create(&file);
+    if img_file.is_err() {
+        return Err(Error::new("Failed create file to save the processed image to"));
+    }
+
+    let img_out = img.save(img_file.as_mut().unwrap(), image::PNG);
+    if img_out.is_err() {
+        return Err(Error::new("Failed to save processed image"));
+    }
 
     // Wait for i3lock to complete, handle non-zero status codes
     if !out.status.success() {

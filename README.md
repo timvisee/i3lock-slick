@@ -28,6 +28,7 @@ i3lock-slick -p color=ff0000 -p ignore-empty-password
 
 ## Requirements
 * `i3lock`: i3lock itself
+* `scrot`: screenshot tool
 
 ## License
 This project is released under the MIT license.
