@@ -1,6 +1,8 @@
 extern crate clap;
 extern crate tempdir;
 
+mod app;
+mod cmd;
 mod img;
 
 use std::cmp;
@@ -12,16 +14,6 @@ use clap::{Arg, ArgMatches, App};
 use img::Img;
 use tempdir::TempDir;
 
-// Get application constants from Cargo
-const APP_NAME: &'static str = env!("CARGO_PKG_NAME");
-const APP_VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const APP_DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
-const APP_AUTHOR: &'static str = env!("CARGO_PKG_AUTHORS");
-
-// Command constant
-const CMD_ARG_PARAMS: &'static str = "parameter";
-const CMD_ARG_FAKE: &'static str = "fake";
-
 // Application result type
 type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
@@ -31,7 +23,7 @@ fn main() {
     let matches = parse_args();
 
     // Create a temporary directory
-    let temp = TempDir::new(APP_NAME)
+    let temp = TempDir::new(app::NAME)
         .expect("Failed to create temporary directory");
 
     let screenshot = screenshot(&temp).unwrap();
@@ -39,7 +31,7 @@ fn main() {
     // Show the lock screen
     let result = lock(Some(&matches), Some(screenshot));
     if result.is_err() {
-        eprintln!("{}\n{} will now quit", result.unwrap_err(), APP_NAME);
+        eprintln!("{}\n{} will now quit", result.unwrap_err(), app::NAME);
         exit(1);
     }
 }
@@ -48,20 +40,20 @@ fn main() {
 ///
 /// A `ArgMatches` struct is returned holding all matches.
 fn parse_args<'a>() -> ArgMatches<'a> {
-    App::new(APP_NAME)
-        .version(APP_VERSION)
-        .about(APP_DESCRIPTION)
-        .author(APP_AUTHOR)
-        .arg(Arg::with_name(CMD_ARG_PARAMS)
+    App::new(app::NAME)
+        .version(app::VERSION)
+        .about(app::DESCRIPTION)
+        .author(app::AUTHOR)
+        .arg(Arg::with_name(cmd::ARG_PARAMS)
             .short("p")
-            .long(CMD_ARG_PARAMS)
+            .long(cmd::ARG_PARAMS)
             .value_name("ARGUMENT | ARGUMENT=VALUE")
             .help("Pass an argument to i3lock")
             .multiple(true)
             .takes_value(true))
-        .arg(Arg::with_name(CMD_ARG_FAKE)
+        .arg(Arg::with_name(cmd::ARG_FAKE)
             .short("f")
-            .long(CMD_ARG_FAKE)
+            .long(cmd::ARG_FAKE)
             .help("Don't invoke i3lock, print the command to stdout instead"))
         .get_matches()
 }
@@ -79,7 +71,7 @@ fn lock<'a>(matches: Option<&ArgMatches>, screenshot: Option<PathBuf>) -> Result
         cmd.append(&mut parse_i3_params(matches));
 
         // Fake running i3lock
-        if matches.is_present(CMD_ARG_FAKE) {
+        if matches.is_present(cmd::ARG_FAKE) {
             fake = true;
         }
     }
@@ -193,7 +185,7 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
 /// Returns a vector of strings with arguments to use when invoking i3lock.
 fn parse_i3_params(matches: &ArgMatches) -> Vec<String> {
     // Get all parameters
-    let params = matches.values_of(CMD_ARG_PARAMS);
+    let params = matches.values_of(cmd::ARG_PARAMS);
     if params.is_none() {
         return Vec::new();
     }
@@ -279,6 +271,6 @@ impl<'a> std::error::Error for Error<'a> {
 
 impl<'a> Display for Error<'a> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{} error: {}", APP_NAME, self.description)
+        write!(f, "{} error: {}", app::NAME, self.description)
     }
 }

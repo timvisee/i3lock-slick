@@ -59,9 +59,9 @@ impl ImgEditor {
     }
 
     /// Save the edited image.
-    pub fn save(self, img: &Img) -> Result<()> {
-        // Determine the image file
-        let mut img_file = &mut File::create(&img.path_buf());
+    pub fn save(self, img: &Img) -> Result<File> {
+        // Open target file
+        let mut img_file = File::create(&img.path_buf());
         if img_file.is_err() {
             return Err(Error::new("Failed create file to save the processed image to"));
         }
@@ -72,6 +72,6 @@ impl ImgEditor {
             return Err(Error::new("Failed to save processed image"));
         }
 
-        Ok(())
+        Ok(img_file.unwrap())
     }
 }
