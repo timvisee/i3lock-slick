@@ -5,8 +5,7 @@ use std::path::PathBuf;
 
 use self::image::DynamicImage;
 
-use super::Result;
-use super::Error;
+use err::{Result, Error};
 
 /// Image struct.
 pub struct Img {
