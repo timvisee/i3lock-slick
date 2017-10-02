@@ -12,7 +12,7 @@ use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
 use err::{Error, Result};
-use img::Img;
+use img::img_proc::{Blur, ImgProc};
 use tempdir::TempDir;
 
 /// Main application entry point.
@@ -148,10 +148,12 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
 
     // Process the image
     let img = img::Img::new(&file);
-    let mut edit = Img::new(&file).edit().unwrap();
+    let mut edit = img.edit().unwrap();
 
     println!("Bluring image...");
-    edit.blur();
+    let mut blur = Blur::new();
+    blur.set_property("sigma", "3".into());
+    edit = blur.process_safe(edit).unwrap();
 
     println!("Saving edited image...");
     if let Err(_) = edit.save(&img) {
