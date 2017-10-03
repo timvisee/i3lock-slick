@@ -3,31 +3,29 @@ extern crate tempdir;
 
 mod app;
 mod cmd;
+mod config;
 mod err;
 mod img;
 
-use std::cmp;
 use std::path::PathBuf;
 use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
+use config::Config;
 use err::{Error, Result};
-use img::img_proc::{Blur, ImgProc};
+use img::img_proc::{Blur, blur, ImgProc};
 use tempdir::TempDir;
 
 /// Main application entry point.
 fn main() {
+    // Create a configuration instance
+    let mut config = Config::new();
+
     // Parse arguments
-    let matches = parse_args();
-
-    // Create a temporary directory
-    let temp = TempDir::new(app::NAME)
-        .expect("Failed to create temporary directory");
-
-    let screenshot = screenshot(&temp).unwrap();
+    config.parse_matches(&parse_args());
 
     // Show the lock screen
-    let result = lock(Some(&matches), Some(screenshot));
+    let result = lock(&mut config);
     if result.is_err() {
         eprintln!("{}\n{} will now quit", result.unwrap_err(), app::NAME);
         exit(1);
@@ -59,36 +57,29 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 /// Show the lock screen
 ///
 /// If `matches` are given, all parameters will be parsed accordingly.
-fn lock<'a>(matches: Option<&ArgMatches>, screenshot: Option<PathBuf>) -> Result<'a, ()> {
-    // Build the command and it's arguments
-    let mut cmd: Vec<String> = vec![String::from("i3lock")];
-    let mut fake = false;
+fn lock<'a>(config: &mut Config) -> Result<'a, ()> {
+    // Create a temporary directory
+    let temp = TempDir::new(app::NAME)
+        .expect("Failed to create temporary directory");
 
-    // Parse parameters
-    if let Some(matches) = matches {
-        cmd.append(&mut parse_i3_params(matches));
-
-        // Fake running i3lock
-        if matches.is_present(cmd::ARG_FAKE) {
-            fake = true;
-        }
-    }
+    // Create a screenshot
+    let screenshot = screenshot(&temp);
 
     // Configure to use the screenshot as lock image
     match screenshot {
-        Some(file) => {
-            cmd.push("--image".into());
-            cmd.push(file.to_str().unwrap().into());
+        Ok(file) => {
+            config.cmd.push("--image".into());
+            config.cmd.push(file.to_str().unwrap().into());
         },
         _ => {}
     }
 
     // Invoke i3lock
-    if !fake {
+    if !config.fake {
         println!("Starting i3lock...");
 
         // Invoke i3lock
-        let mut args_iter = cmd.iter();
+        let mut args_iter = config.cmd.iter();
         let out = Command::new(args_iter.next().unwrap())
             .args(args_iter)
             .output()
@@ -125,7 +116,7 @@ fn lock<'a>(matches: Option<&ArgMatches>, screenshot: Option<PathBuf>) -> Result
 
     } else {
         // Don't invoke i3lock, print the command to stdout instead
-        println!("{}", cmd.join(" "));
+        println!("{}", config.cmd.join(" "));
     }
 
     Ok(())
@@ -152,7 +143,7 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
 
     println!("Bluring image...");
     let mut blur = Blur::new();
-    blur.set_property("sigma", "3".into());
+    blur.set_property(blur::PROP_SIGMA, "3".into());
     edit = blur.process_safe(edit).unwrap();
 
     println!("Saving edited image...");
@@ -178,59 +169,4 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
     }
 
     Ok(file)
-}
-
-/// Parse parameters that should be passed to i3lock if any matched.
-///
-/// Returns a vector of strings with arguments to use when invoking i3lock.
-fn parse_i3_params(matches: &ArgMatches) -> Vec<String> {
-    // Get all parameters
-    let params = matches.values_of(cmd::ARG_PARAMS);
-    if params.is_none() {
-        return Vec::new();
-    }
-
-    // Create a list of arguments to use
-    let mut args: Vec<String> = Vec::new();
-
-    // Process all i3 parameters
-    for param in params.unwrap() {
-        // Split the parameter in parts
-        let mut parts = param.splitn(2, '=');
-
-        // Get the argument, define variables for the argument and a possible value
-        let part_arg = parts.next().unwrap();
-        let mut arg = String::new();
-        let mut val: Option<String> = None;
-
-        // Prefix 1 or 2 argument hyphens if missing
-        if !part_arg.starts_with("-") {
-            for _ in 0..cmp::min(part_arg.len(), 2) {
-                arg.push('-');
-            }
-        }
-
-        // Append the actual argument after the hyphens
-        arg.push_str(part_arg);
-
-        // Parse argument values if set
-        if let Some(part_val) = parts.next() {
-            // Determine whether to attach the argument and value with an equals sign,
-            // or whether to separate them with a space.
-            if arg.len() <= 2 {
-                val = Some(part_val.into());
-            } else {
-                arg.push('=');
-                arg.push_str(part_val);
-            }
-        }
-
-        // Push the arguments to the result
-        args.push(arg);
-        if val.is_some() {
-            args.push(val.unwrap());
-        }
-    }
-
-    args
 }

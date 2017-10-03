@@ -6,7 +6,7 @@ use img::ImgEdit;
 use super::ImgProc;
 
 // Property names
-static PROP_SIGMA: &'static str = "sigma";
+pub static PROP_SIGMA: &'static str = "sigma";
 
 /// Image blurring processor.
 pub struct Blur {
