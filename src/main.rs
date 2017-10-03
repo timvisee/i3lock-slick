@@ -22,7 +22,7 @@ fn main() {
     let mut config = Config::new();
 
     // Parse arguments
-    config.parse_matches(&parse_args());
+    config.parse_matches(&parse_args()).expect("Failed to parse CLI arguments");
 
     // Show the lock screen
     let result = lock(&mut config);
@@ -57,7 +57,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 /// Show the lock screen
 ///
 /// If `matches` are given, all parameters will be parsed accordingly.
-fn lock<'a>(config: &mut Config) -> Result<'a, ()> {
+fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
     // Create a temporary directory
     let temp = TempDir::new(app::NAME)
         .expect("Failed to create temporary directory");
@@ -75,7 +75,7 @@ fn lock<'a>(config: &mut Config) -> Result<'a, ()> {
     }
 
     // Invoke i3lock
-    if !config.fake {
+    if !config.property::<bool>(cmd::ARG_FAKE)? {
         println!("Starting i3lock...");
 
         // Invoke i3lock

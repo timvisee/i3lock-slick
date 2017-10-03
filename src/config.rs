@@ -1,13 +1,20 @@
 extern crate clap;
+extern crate config;
+extern crate serde;
 
 use std::cmp;
+use std::sync::RwLock;
 
-use clap::ArgMatches;
 use cmd;
+use err::{Error, Result};
+use self::clap::ArgMatches;
+use self::serde::Deserialize;
 
-/// Configuration structure.
+/// App configuration structure.
 pub struct Config {
-    pub fake: bool,
+    cfg: RwLock<self::config::Config>,
+
+    // TODO: Put this into some action intent (this is parsed data for after the configuration)
     pub cmd: Vec<String>,
 }
 
@@ -15,19 +22,34 @@ impl Config {
     /// Constructor, with configuration defaults.
     pub fn new() -> Self {
         Config {
-            fake: false,
+            cfg: RwLock::new(self::config::Config::default()),
+
             cmd: vec![String::from("i3lock")],
         }
     }
 
+    /// Get the given property by it's `key`.
+    pub fn property<'de, T: Deserialize<'de>>(&self, key: &'de str) -> Result<T> {
+        match self.cfg.read() {
+            Ok(property) =>
+                match property.get(key) {
+                    Ok(value) => Ok(value),
+                    Err(_) => Err(Error::new("Failed to parse property.")),
+                },
+            Err(_) => Err(Error::new("Failed to read property")),
+        }
+    }
+
     /// Parse a set of command line argument matches.
-    pub fn parse_matches(&mut self, matches: &ArgMatches) {
+    pub fn parse_matches(&mut self, matches: &ArgMatches) -> Result<()> {
+        self.parse_i3_params(matches);
+
         // Fake running
         if matches.is_present(cmd::ARG_FAKE) {
-            self.fake = true;
+            self.cfg.write()?.set(cmd::ARG_FAKE, true)?;
         }
 
-        self.parse_i3_params(matches);
+        Ok(())
     }
 
     /// Parse parameters that should be passed to i3lock if any matched.
