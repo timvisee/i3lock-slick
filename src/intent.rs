@@ -1,7 +1,7 @@
 extern crate config;
 
 use std::cmp;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::process::Command;
 
 use cmd;
@@ -33,7 +33,7 @@ impl Intent {
         let mut intent = Self::new();
 
         // Get the current list of arguments or create a fresh one if non-existent
-        let params = config.get_dict(cmd::ARG_PARAMS, HashMap::new());
+        let params = config.get_dict(cmd::ARG_PARAMS, BTreeMap::new());
 
         // Process all i3 parameters
         for (mut arg, base_val) in params.unwrap() {

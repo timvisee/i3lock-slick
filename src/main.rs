@@ -7,8 +7,9 @@ mod config;
 mod err;
 mod img;
 mod intent;
+mod yaml_helper;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
@@ -22,7 +23,14 @@ use intent::Intent;
 /// Main application entry point.
 fn main() {
     // Create a configuration instance
-    let mut config = Config::new();
+    let mut config = Config::default();
+
+    // TODO: Don't use an absolute path here
+    // TODO: Properties aren't parsed
+    let path = Path::new("/home/timvisee/.i3lock-slick.yml");
+    if path.is_file() {
+        config.merge_file(path).unwrap();
+    }
 
     // Parse arguments
     config.parse_matches(&parse_args()).expect("Failed to parse CLI arguments");
@@ -81,7 +89,7 @@ fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
     }
 
     // Invoke i3lock, or output it's command
-    if !config.get_bool(cmd::ARG_FAKE)? {
+    if !config.get_bool(cmd::ARG_FAKE).unwrap_or(false) {
         intent.run().unwrap();
     } else {
         // TODO: Escape arguments with spaces and other weird characters?

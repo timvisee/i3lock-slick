@@ -1,61 +1,191 @@
 extern crate clap;
 extern crate config;
 extern crate serde;
+extern crate yaml_rust;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 use std::sync::RwLock;
+
+use self::clap::ArgMatches;
+use self::serde::Deserialize;
+use self::yaml_rust::{Yaml, YamlLoader};
 
 use cmd;
 use err::{Error, Result};
-use self::clap::ArgMatches;
-use self::serde::Deserialize;
+use yaml_helper::YamlHelper;
 
 /// App configuration structure.
 pub struct Config {
-    cfg: RwLock<self::config::Config>,
+    data: Option<Yaml>,
 }
 
 impl Config {
     /// Constructor, with configuration defaults.
-    pub fn new() -> Self {
+    pub fn default() -> Self {
         Config {
-            cfg: RwLock::new(self::config::Config::default()),
+            data: None,
         }
     }
 
-    /// Get the given property by it's `key`.
-    pub fn get<'de, T: Deserialize<'de>>(&self, key: &'de str) -> Result<T> {
-        match self.cfg.read() {
-            Ok(property) =>
-                match property.get(key) {
-                    Ok(value) => Ok(value),
-                    Err(_) => Err(Error::new("Failed to parse property.")),
-                },
-            Err(_) => Err(Error::new("Failed to read property")),
+    /// Load a YAML configuration from a `file`, and merge it with the default configuration.
+    ///
+    /// Returns an error if loading or parsing failed.
+    pub fn from(file: &Path) -> Result<Self> {
+        // Get the default config
+        let mut config = Config::default();
+
+        // Merge the file to load from
+        config.merge_file(file)?;
+
+        Ok(config)
+    }
+
+    /// Merge the current configuration with the `other` given Yaml.
+    ///
+    /// `other` overrides the current configuration.
+    fn merge(&mut self, other: Yaml) -> Result<()> {
+        // Set the data if it's none
+        if self.data.is_none() {
+            self.data = Some(other);
+            return Ok(());
+        }
+
+        if let Some(other_root) = other.as_hash() {
+            if let Some(ref mut root) = self.data.as_mut().unwrap().as_hash() {
+                for (key, value) in other_root.into_iter() {
+                    root.insert(*key, *value);
+                }
+
+                Ok(())
+            } else {
+                Err(Error::new("Failed to access configuration root"))
+            }
+        } else {
+            Err(Error::new("Failed to access other configuration root"))
         }
     }
+
+    /// Merge the file at the given `path` into the configuration.
+    ///
+    /// Any load or parse errors are returned if merging failed.
+    pub fn merge_file(&mut self, path: &Path) -> Result<()> {
+        // Open the file
+        let file = File::open(path)?;
+
+        // Read the file contents
+        let mut source = String::new();
+        file.read_to_string(&mut source)?;
+
+        // Load the YAML documents, and merge it
+        for doc in YamlLoader::load_from_str(&source)? {
+            self.merge(doc)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn get<'a: 'b, 'b>(&'a self, key: &'b str) -> Option<&'b Yaml> {
+        // Return if no data is loaded
+        if self.data.is_none() {
+            return None;
+        }
+
+        self.data.as_ref().unwrap().property(key)
+    }
+
+    pub fn set(&mut self, node: &str, value: Yaml) -> Result<()> {
+        // Initialize the configuration
+        if self.data.is_none() {
+            self.data = Some(Yaml::Hash(BTreeMap::new()));
+        }
+
+        self.data.unwrap().set_property(node, value)
+    }
+
+//    /// Get the given property by it's `key`.
+//    pub fn get<'de, T: Deserialize<'de>>(&self, key: &'de str) -> Result<T> {
+//        match self.cfg.read() {
+//            Ok(property) =>
+//                match property.get(key) {
+//                    Ok(value) => Ok(value),
+//                    Err(_) => Err(Error::new("Failed to parse property.")),
+//                },
+//            Err(_) => Err(Error::new("Failed to read property")),
+//        }
+//    }
 
     /// Check whether a given property is true or false, by it's `key`.
-    pub fn get_bool(&self, key: &str) -> Result<bool> {
-        self.get(key)
+    pub fn get_bool(&self, key: &str) -> Option<bool> {
+        // TODO: Revert this?
+//        self.get(key)
+
+        match self.get(key) {
+            Some(property) =>
+                property.as_bool(),
+            None => None,
+        }
     }
 
-    /// Get a key value dictionary as `(String, String)` in a `HashMap` for the given key.
+    // TODO: Update description.
+    /// Get a key value dictionary as `(String, String)` in a `HashMap` for the given `node`.
     ///
     /// The `def` value is returned if the given property was not found.
     ///
     /// Errors are returned if parsing the dictionary resulted in a problem.
-    pub fn get_dict(&self, key: &str, def: HashMap<String, String>) -> Result<HashMap<String, String>> {
-        match self.cfg.read()?.get_table(key) {
-            Ok(table) => Ok(
-                table
-                .into_iter()
-                .map(|(key, val)| (key, val.into_str().unwrap()))
-                .collect()
-            ),
-            Err(config::ConfigError::NotFound(_)) => Ok(def),
-            Err(err) => return Err(err.into()),
+    pub fn get_dict(&self, key: &str, def: BTreeMap<String, String>) -> Result<BTreeMap<String, String>> {
+        // The data must be available
+        match self.data {
+            Some(data) =>
+                // The given node must be available
+                match data.property(key) {
+                    Some(object) => {
+                        // Parse the object as dictionary
+                        match object.as_hash() {
+                            Some(map) => {
+                                // Map the Yaml objects into string results
+                                let results = map.into_iter()
+                                    .map(|(key, val)| (
+                                        // Map the Yaml key and value into owned strings
+                                        key.as_str().ok_or(Error::new("Unable to convert dictionary key into a String")),
+                                        val.as_str().ok_or(Error::new("Unable to convert dictionary value into a String")),
+                                    ));
+
+                                // Filter errors and report them
+                                if let Some(err) = results.peekable()
+                                    .filter_map(|(key, val)| key.err().or(val.err()))
+                                    .next() {
+                                    return Err(err);
+                                }
+
+                                // Map result string references into owned strings, collect
+                                Ok(results.into_iter()
+                                    .map(|(key, val)| (key.unwrap().into(), val.unwrap().into()))
+                                    .collect())
+                            },
+                            None => Err(Error::new("The property is not in Hash format, unable to parse it as dictionary"))
+                        }
+                    },
+                    None => Ok(def),
+                },
+            None => Ok(def),
         }
+    }
+
+    pub fn set_dict(&mut self, node: &str, dict: BTreeMap<String, String>) -> Result<()> {
+        self.set(
+            node,
+            Yaml::Hash(
+                dict.into_iter()
+                    .map(|(ref key, ref val)| (
+                        Yaml::from_str(key),
+                        Yaml::from_str(val),
+                    ))
+                    .collect()
+            )
+        )
     }
 
     /// Parse a set of command line argument matches.
@@ -65,7 +195,7 @@ impl Config {
 
         // Fake running
         if matches.is_present(cmd::ARG_FAKE) {
-            self.cfg.write()?.set(cmd::ARG_FAKE, true)?;
+            self.set(cmd::ARG_PARAMS, Yaml::Boolean(true))?;
         }
 
         Ok(())
@@ -85,7 +215,11 @@ impl Config {
         }
 
         // Get the current list of arguments or create a fresh one if non-existent
-        let mut cfg_params = self.get_dict(cmd::ARG_PARAMS, HashMap::new())?;
+        let mut cfg_params = self.get_dict(cmd::ARG_PARAMS, BTreeMap::new());
+        if cfg_params.is_err() {
+            return Err(cfg_params.unwrap_err());
+        }
+        let mut cfg_params = cfg_params.unwrap();
 
         // Process all i3 parameters
         for param in params.unwrap() {
@@ -106,7 +240,6 @@ impl Config {
         }
 
         // Set the properties in the configuration
-        self.cfg.write()?.set(cmd::ARG_PARAMS, cfg_params)?;
-        Ok(())
+        self.set_dict(cmd::ARG_PARAMS, cfg_params)
     }
 }
