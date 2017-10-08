@@ -1,4 +1,5 @@
 extern crate config;
+extern crate yaml_rust;
 
 use std;
 use std::convert::From;
@@ -79,5 +80,21 @@ impl<'a> From<PoisonError<RwLockReadGuard<'a, config::Config>>> for Error<'a> {
 impl<'a> From<PoisonError<RwLockWriteGuard<'a, config::Config>>> for Error<'a> {
     fn from(_: PoisonError<RwLockWriteGuard<'a, config::Config>>) -> Self {
         Error::new("The write guard of this configuratin is poisoned")
+    }
+}
+
+impl<'a> From<yaml_rust::ScanError> for Error<'a> {
+    fn from(_: yaml_rust::ScanError) -> Self {
+//        use std::error::Error;
+//        super::Error::new(err.description())
+        Error::new("Failed to parse YAML configuration file")
+    }
+}
+
+impl<'a> From<std::io::Error> for Error<'a> {
+    fn from(_: std::io::Error) -> Self {
+//        use std::error::Error;
+//        super::Error::new(err.description())
+        Error::new("IO operation failed")
     }
 }
