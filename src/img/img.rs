@@ -2,7 +2,7 @@ extern crate image;
 
 use std::path::PathBuf;
 
-use err::{Result};
+use err::Result;
 use img::ImgEdit;
 
 /// Image struct.

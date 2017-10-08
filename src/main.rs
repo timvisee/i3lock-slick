@@ -6,15 +6,18 @@ mod cmd;
 mod config;
 mod err;
 mod img;
+mod intent;
 
 use std::path::PathBuf;
 use std::process::{Command, exit};
 
 use clap::{Arg, ArgMatches, App};
+use tempdir::TempDir;
+
 use config::Config;
 use err::{Error, Result};
 use img::img_proc::{Blur, blur, ImgProc};
-use tempdir::TempDir;
+use intent::Intent;
 
 /// Main application entry point.
 fn main() {
@@ -58,6 +61,9 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 ///
 /// If `matches` are given, all parameters will be parsed accordingly.
 fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
+    // Create a program intent
+    let mut intent = Intent::from(config);
+
     // Create a temporary directory
     let temp = TempDir::new(app::NAME)
         .expect("Failed to create temporary directory");
@@ -68,55 +74,18 @@ fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
     // Configure to use the screenshot as lock image
     match screenshot {
         Ok(file) => {
-            config.cmd.push("--image".into());
-            config.cmd.push(file.to_str().unwrap().into());
+            intent.push_arg("--image".into());
+            intent.push_arg(file.to_str().unwrap().into());
         },
         _ => {}
     }
 
-    // Invoke i3lock
-    if !config.property::<bool>(cmd::ARG_FAKE)? {
-        println!("Starting i3lock...");
-
-        // Invoke i3lock
-        let mut args_iter = config.cmd.iter();
-        let out = Command::new(args_iter.next().unwrap())
-            .args(args_iter)
-            .output()
-            .expect("Failed to invoke i3lock");
-
-        // Wait for i3lock to complete, handle non-zero status codes
-        if out.status.success() {
-            println!("i3lock exited successfully");
-        } else {
-            println!(
-                "i3lock exited with a non-zero status code (code: {})",
-                out.status.code().unwrap()
-            );
-        }
-
-        // Print stdout and stderr from i3lock if not empty
-        if !out.stdout.is_empty() {
-            println!("\ni3lock stdout:");
-            println!("==========");
-            println!("{}", String::from_utf8_lossy(&out.stdout));
-            println!("==========");
-        }
-        if !out.stderr.is_empty() {
-            println!("\ni3lock stderr:");
-            println!("==========");
-            println!("{}", String::from_utf8_lossy(&out.stderr));
-            println!("==========");
-        }
-
-        // Return errors
-        if !out.status.success() {
-            return Err(Error::new("i3lock exited with a non-zero status code"));
-        }
-
+    // Invoke i3lock, or output it's command
+    if !config.get_bool(cmd::ARG_FAKE)? {
+        intent.run().unwrap();
     } else {
-        // Don't invoke i3lock, print the command to stdout instead
-        println!("{}", config.cmd.join(" "));
+        // TODO: Escape arguments with spaces and other weird characters?
+        println!("{}", intent.command());
     }
 
     Ok(())
