@@ -30,18 +30,18 @@ impl Config {
         }
     }
 
-    /// Load a YAML configuration from a `file`, and merge it with the default configuration.
-    ///
-    /// Returns an error if loading or parsing failed.
-    pub fn from(file: &Path) -> Result<Self> {
-        // Get the default config
-        let mut config = Config::default();
-
-        // Merge the file to load from
-        config.merge_file(file)?;
-
-        Ok(config)
-    }
+//    /// Load a YAML configuration from a `file`, and merge it with the default configuration.
+//    ///
+//    /// Returns an error if loading or parsing failed.
+//    pub fn from(file: &Path) -> Result<Self> {
+//        // Get the default config
+//        let mut config = Config::default();
+//
+//        // Merge the file to load from
+//        config.merge_file(file)?;
+//
+//        Ok(config)
+//    }
 
     /// Merge the current configuration with the `other` given Yaml.
     ///
@@ -53,18 +53,26 @@ impl Config {
             return Ok(());
         }
 
-        if let Some(other_root) = other.as_hash() {
-            if let Some(ref mut root) = self.data.as_mut().unwrap().as_hash() {
-                for (key, value) in other_root.into_iter() {
-                    root.insert(*key, *value);
-                }
+        // Get the other hash
+        match other {
+            Yaml::Hash(other_root) =>
+                // Get the mutable data hash
+                // TODO: Don't unwrap, unsafe
+                match *self.data.as_mut().unwrap() {
+                    Yaml::Hash(ref mut root) => {
+                        // Merge the hashes
+                        // TODO: Refactor this into a functional for_each
+                        for (key, value) in other_root.into_iter() {
+                            root.insert(key, value);
+                        }
 
-                Ok(())
-            } else {
-                Err(Error::new("Failed to access configuration root"))
-            }
-        } else {
-            Err(Error::new("Failed to access other configuration root"))
+                        Ok(())
+                    },
+
+                    _ => Err(Error::new("Failed to access configuration root")),
+                },
+
+            _ => Err(Error::new("Failed to access other configuration root"))
         }
     }
 
@@ -73,18 +81,20 @@ impl Config {
     /// Any load or parse errors are returned if merging failed.
     pub fn merge_file(&mut self, path: &Path) -> Result<()> {
         // Open the file
-        let file = File::open(path)?;
+        let mut file = File::open(path)?;
 
         // Read the file contents
         let mut source = String::new();
         file.read_to_string(&mut source)?;
 
-        // Load the YAML documents, and merge it
-        for doc in YamlLoader::load_from_str(&source)? {
-            self.merge(doc)?;
+        // Load the first YAML document, and merge it
+        match YamlLoader::load_from_str(&source)?.into_iter().next() {
+            Some(doc) => {
+                self.merge(doc)?;
+                Ok(())
+            },
+            None => Err(Error::new("No YAML document found in the given file")),
         }
-
-        Ok(())
     }
 
     pub fn get<'a: 'b, 'b>(&'a self, key: &'b str) -> Option<&'b Yaml> {
@@ -102,7 +112,7 @@ impl Config {
             self.data = Some(Yaml::Hash(BTreeMap::new()));
         }
 
-        self.data.unwrap().set_property(node, value)
+        self.data.as_mut().unwrap().set_property(node, value)
     }
 
 //    /// Get the given property by it's `key`.
@@ -137,7 +147,7 @@ impl Config {
     /// Errors are returned if parsing the dictionary resulted in a problem.
     pub fn get_dict(&self, key: &str, def: BTreeMap<String, String>) -> Result<BTreeMap<String, String>> {
         // The data must be available
-        match self.data {
+        match self.data.as_ref() {
             Some(data) =>
                 // The given node must be available
                 match data.property(key) {
@@ -146,24 +156,16 @@ impl Config {
                         match object.as_hash() {
                             Some(map) => {
                                 // Map the Yaml objects into string results
-                                let results = map.into_iter()
-                                    .map(|(key, val)| (
-                                        // Map the Yaml key and value into owned strings
-                                        key.as_str().ok_or(Error::new("Unable to convert dictionary key into a String")),
-                                        val.as_str().ok_or(Error::new("Unable to convert dictionary value into a String")),
-                                    ));
-
-                                // Filter errors and report them
-                                if let Some(err) = results.peekable()
-                                    .filter_map(|(key, val)| key.err().or(val.err()))
-                                    .next() {
-                                    return Err(err);
-                                }
-
-                                // Map result string references into owned strings, collect
-                                Ok(results.into_iter()
-                                    .map(|(key, val)| (key.unwrap().into(), val.unwrap().into()))
-                                    .collect())
+                                // TODO: Somehow collect errors here
+                                Ok(
+                                    map.into_iter()
+                                        .map(|(key, val)| (
+                                            // Map the Yaml key and value into owned strings
+                                            key.as_str().unwrap().into(),
+                                            val.as_str().unwrap().into(),
+                                        ))
+                                        .collect()
+                                )
                             },
                             None => Err(Error::new("The property is not in Hash format, unable to parse it as dictionary"))
                         }

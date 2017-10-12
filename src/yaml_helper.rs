@@ -124,28 +124,28 @@ impl YamlHelper for Yaml {
         // Get the Yaml key
         let key = Yaml::from_str(keys.next().unwrap());
 
-        // Get the YAML object as map
-        if object.as_hash().is_some() {
-            let mut map = object.as_hash().unwrap();
+        match *object {
+            Yaml::Hash(ref mut map) => {
+                // Get the value for the first key
+                let mut object: &mut Yaml = match map.get_mut(&key) {
+                    Some(value) => value,
+                    None => {
+                        map.insert(key.clone(), Yaml::Hash(BTreeMap::new()));
+                        *map.get_mut(&key).unwrap()
+                    }
+                };
 
-            // Get the value for the first key
-            let mut object: Yaml = match map.get(&key) {
-                Some(mut value) => *value,
-                None => {
-                    map.insert(key.clone(), Yaml::Hash(BTreeMap::new()));
-                    *map.get_mut(&key).unwrap()
-                }
-            };
+                Yaml::set_property_in(&mut object, keys.next().unwrap_or(""), value)
+            },
 
-            Yaml::set_property_in(&mut object, keys.next().unwrap_or(""), value)
+            _ => {
+                // Create new map, and set it as current object
+                let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
+                map.insert(key.clone(), Yaml::Null);
+                *object = Yaml::Hash(map);
 
-        } else {
-            // Create new map, and set it as current object
-            let mut map: BTreeMap<Yaml, Yaml> = BTreeMap::new();
-            map.insert(key.clone(), Yaml::Null);
-            *object = Yaml::Hash(map);
-
-            Yaml::set_property_in(&mut object, keys.next().unwrap_or(""), value)
+                Yaml::set_property_in(object, keys.next().unwrap_or(""), value)
+            }
         }
     }
 
