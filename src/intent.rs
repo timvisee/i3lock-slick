@@ -24,7 +24,7 @@ impl Intent {
     /// Construct the intent with the default properties.
     pub fn new() -> Self {
         Intent {
-            cmd: vec!["i3lock-slick".into()],
+            cmd: vec!["i3lock".into()],
         }
     }
 

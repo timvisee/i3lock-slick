@@ -4,7 +4,7 @@ use std::collections::{BTreeMap};
 
 use self::yaml_rust::{Yaml, YamlLoader};
 
-use err::{Error, Result};
+use err::Result;
 
 /// A trait providing helper functions for a `Yaml` object.
 /// These helper functions make it easy to get and set properties in such object.
@@ -126,16 +126,26 @@ impl YamlHelper for Yaml {
 
         match *object {
             Yaml::Hash(ref mut map) => {
-                // Get the value for the first key
-                let mut object: &mut Yaml = match map.get_mut(&key) {
-                    Some(value) => value,
-                    None => {
-                        map.insert(key.clone(), Yaml::Hash(BTreeMap::new()));
-                        *map.get_mut(&key).unwrap()
-                    }
-                };
+                // TODO: Improve this!
 
-                Yaml::set_property_in(&mut object, keys.next().unwrap_or(""), value)
+                // Get the value for the first key
+                if map.get_mut(&key).is_some() {
+                    return Ok(
+                        Yaml::set_property_in(
+                            map.get_mut(&key).unwrap(),
+                            keys.next().unwrap_or(""),
+                            value,
+                        )?
+                    );
+                }
+
+                // Insert the property
+                map.insert(key.clone(), Yaml::Hash(BTreeMap::new()));
+                Ok(Yaml::set_property_in(
+                    map.get_mut(&key).unwrap(),
+                    keys.next().unwrap_or(""),
+                    value,
+                )?)
             },
 
             _ => {

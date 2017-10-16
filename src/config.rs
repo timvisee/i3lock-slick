@@ -7,10 +7,8 @@ use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use std::sync::RwLock;
 
 use self::clap::ArgMatches;
-use self::serde::Deserialize;
 use self::yaml_rust::{Yaml, YamlLoader};
 
 use cmd;
@@ -88,12 +86,13 @@ impl Config {
         file.read_to_string(&mut source)?;
 
         // Load the first YAML document, and merge it
+        // TODO: Load all documents
         match YamlLoader::load_from_str(&source)?.into_iter().next() {
             Some(doc) => {
                 self.merge(doc)?;
                 Ok(())
             },
-            None => Err(Error::new("No YAML document found in the given file")),
+            None => Ok(()),
         }
     }
 
@@ -145,7 +144,7 @@ impl Config {
     /// The `def` value is returned if the given property was not found.
     ///
     /// Errors are returned if parsing the dictionary resulted in a problem.
-    pub fn get_dict(&self, key: &str, def: BTreeMap<String, String>) -> Result<BTreeMap<String, String>> {
+    pub fn get_dict<'a>(&self, key: &str, def: BTreeMap<String, String>) -> Result<'a, BTreeMap<String, String>> {
         // The data must be available
         match self.data.as_ref() {
             Some(data) =>
@@ -167,7 +166,8 @@ impl Config {
                                         .collect()
                                 )
                             },
-                            None => Err(Error::new("The property is not in Hash format, unable to parse it as dictionary"))
+                            None =>
+                                Err(Error::new("The property is not in Hash format, unable to parse it as dictionary"))
                         }
                     },
                     None => Ok(def),
@@ -197,7 +197,7 @@ impl Config {
 
         // Fake running
         if matches.is_present(cmd::ARG_FAKE) {
-            self.set(cmd::ARG_PARAMS, Yaml::Boolean(true))?;
+            self.set(cmd::ARG_FAKE, Yaml::Boolean(true))?;
         }
 
         Ok(())
@@ -217,7 +217,7 @@ impl Config {
         }
 
         // Get the current list of arguments or create a fresh one if non-existent
-        let mut cfg_params = self.get_dict(cmd::ARG_PARAMS, BTreeMap::new());
+        let cfg_params = self.get_dict(cmd::ARG_PARAMS, BTreeMap::new());
         if cfg_params.is_err() {
             return Err(cfg_params.unwrap_err());
         }
