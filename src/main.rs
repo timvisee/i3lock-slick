@@ -58,10 +58,10 @@ fn parse_args<'a>() -> ArgMatches<'a> {
             .help("Pass an argument to i3lock")
             .multiple(true)
             .takes_value(true))
-        .arg(Arg::with_name(cmd::ARG_FAKE)
-            .short("f")
-            .long(cmd::ARG_FAKE)
-            .help("Don't invoke i3lock, print the command to stdout instead"))
+        .arg(Arg::with_name(cmd::ARG_DRY)
+            .short("d")
+            .long(cmd::ARG_DRY)
+            .help("Don't invoke i3lock, output the command to stdout instead"))
         .get_matches()
 }
 
@@ -89,7 +89,7 @@ fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
     }
 
     // Invoke i3lock, or output it's command
-    if !config.get_bool(cmd::ARG_FAKE).unwrap_or(false) {
+    if !config.get_bool(cmd::ARG_DRY).unwrap_or(false) {
         intent.run().unwrap();
     } else {
         // TODO: Escape arguments with spaces and other weird characters?

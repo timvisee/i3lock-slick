@@ -184,9 +184,9 @@ impl Config {
         // TODO: Don't unwrap, but try! the result!
         self.parse_i3_params(matches).unwrap();
 
-        // Fake running
-        if matches.is_present(cmd::ARG_FAKE) {
-            self.set(cmd::ARG_FAKE, Yaml::Boolean(true))?;
+        // Dry run
+        if matches.is_present(cmd::ARG_DRY) {
+            self.set(cmd::ARG_DRY, Yaml::Boolean(true))?;
         }
 
         Ok(())

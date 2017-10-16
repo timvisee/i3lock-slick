@@ -9,5 +9,5 @@
 #  clock: ""
 #  color: "FFFFFF"
 
-# Fake invoking i3lock, output the command that would run to the console instead.
-#fake: false
+# Dry run, instead of actually invoking i3lock output the command that is used
+#dry: false
