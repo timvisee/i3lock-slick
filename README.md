@@ -26,6 +26,17 @@ i3lock-slick
 i3lock-slick -p color=ff0000 -p ignore-empty-password
 ```
 
+## Installation
+The tool is currently installed using Rust's `cargo`.
+
+```
+git clone https://github.com/timvisee/i3lock-slick.git
+cd i3lock-slick
+cargo install
+```
+
+Packages will be created at a later time.
+
 ## Requirements
 * `i3lock`: i3lock itself
 * `scrot`: screenshot tool

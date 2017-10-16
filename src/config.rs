@@ -1,6 +1,5 @@
 extern crate clap;
 extern crate config;
-extern crate serde;
 extern crate yaml_rust;
 
 use std::collections::BTreeMap;
@@ -77,7 +76,7 @@ impl Config {
     /// Merge the file at the given `path` into the configuration.
     ///
     /// Any load or parse errors are returned if merging failed.
-    pub fn merge_file(&mut self, path: &Path) -> Result<()> {
+    pub fn merge_file<'a>(&'a mut self, path: &Path) -> Result<'a, ()> {
         // Open the file
         let mut file = File::open(path)?;
 
@@ -86,7 +85,6 @@ impl Config {
         file.read_to_string(&mut source)?;
 
         // Load the first YAML document, and merge it
-        // TODO: Load all documents
         match YamlLoader::load_from_str(&source)?.into_iter().next() {
             Some(doc) => {
                 self.merge(doc)?;
@@ -96,15 +94,19 @@ impl Config {
         }
     }
 
-    pub fn get<'a: 'b, 'b>(&'a self, key: &'b str) -> Option<&'b Yaml> {
+    /// Get the Yaml property at the given `node`.
+    ///
+    /// `None` is returned if the node doesn't exist.
+    pub fn get<'a: 'b, 'b>(&'a self, node: &'b str) -> Option<&'b Yaml> {
         // Return if no data is loaded
         if self.data.is_none() {
             return None;
         }
 
-        self.data.as_ref().unwrap().property(key)
+        self.data.as_ref().unwrap().property(node)
     }
 
+    /// Set the Yaml property at the given `node`.
     pub fn set(&mut self, node: &str, value: Yaml) -> Result<()> {
         // Initialize the configuration
         if self.data.is_none() {
@@ -114,42 +116,28 @@ impl Config {
         self.data.as_mut().unwrap().set_property(node, value)
     }
 
-//    /// Get the given property by it's `key`.
-//    pub fn get<'de, T: Deserialize<'de>>(&self, key: &'de str) -> Result<T> {
-//        match self.cfg.read() {
-//            Ok(property) =>
-//                match property.get(key) {
-//                    Ok(value) => Ok(value),
-//                    Err(_) => Err(Error::new("Failed to parse property.")),
-//                },
-//            Err(_) => Err(Error::new("Failed to read property")),
-//        }
-//    }
-
-    /// Check whether a given property is true or false, by it's `key`.
-    pub fn get_bool(&self, key: &str) -> Option<bool> {
-        // TODO: Revert this?
-//        self.get(key)
-
-        match self.get(key) {
+    /// Check whether a given property is true or false, by it's `node`.
+    ///
+    /// None is returned if the property doesn't exist, or if it isn't a boolean.
+    pub fn get_bool(&self, node: &str) -> Option<bool> {
+        match self.get(node) {
             Some(property) =>
                 property.as_bool(),
             None => None,
         }
     }
 
-    // TODO: Update description.
-    /// Get a key value dictionary as `(String, String)` in a `HashMap` for the given `node`.
+    /// Get a key value dictionary as `(String, String)` in a `HashMap` at the given `node`.
     ///
     /// The `def` value is returned if the given property was not found.
     ///
     /// Errors are returned if parsing the dictionary resulted in a problem.
-    pub fn get_dict<'a>(&self, key: &str, def: BTreeMap<String, String>) -> Result<'a, BTreeMap<String, String>> {
+    pub fn get_dict<'a>(&self, node: &str, def: BTreeMap<String, String>) -> Result<'a, BTreeMap<String, String>> {
         // The data must be available
         match self.data.as_ref() {
             Some(data) =>
                 // The given node must be available
-                match data.property(key) {
+                match data.property(node) {
                     Some(object) => {
                         // Parse the object as dictionary
                         match object.as_hash() {
@@ -159,7 +147,7 @@ impl Config {
                                 Ok(
                                     map.into_iter()
                                         .map(|(key, val)| (
-                                            // Map the Yaml key and value into owned strings
+                                            // Map the Yaml node and value into owned strings
                                             key.as_str().unwrap().into(),
                                             val.as_str().unwrap().into(),
                                         ))
@@ -176,6 +164,7 @@ impl Config {
         }
     }
 
+    /// Set a (String, String) dictionary at the given `node` in the configuration.
     pub fn set_dict(&mut self, node: &str, dict: BTreeMap<String, String>) -> Result<()> {
         self.set(
             node,
