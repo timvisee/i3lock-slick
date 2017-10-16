@@ -27,6 +27,10 @@ fn main() {
 
     // TODO: Don't use an absolute path here
     // TODO: Properties aren't parsed
+    let path = Path::new("/home/timvisee/.config/i3lock-slick/config.yml");
+    if path.is_file() {
+        config.merge_file(path).unwrap();
+    }
     let path = Path::new("/home/timvisee/.i3lock-slick.yml");
     if path.is_file() {
         config.merge_file(path).unwrap();

@@ -6,8 +6,14 @@
 
 # A list of parameters that the tool should pass to i3lock.
 #parameter:
-#  clock: ""
-#  color: "FFFFFF"
+  # Show a clock
+  #clock: ""
+
+  # Background color
+  #color: "FFFFFF"
 
 # Dry run, instead of actually invoking i3lock output the command that is used
 #dry: false
+
+# Version of i3lock-slick this targeted at
+version: "0.0.1"
