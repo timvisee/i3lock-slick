@@ -37,6 +37,17 @@ cargo install
 
 Packages will be created at a later time.
 
+## Dotfiles
+The tool has support for dotfiles,
+which may fully configure i3lock-slick as required and eliminates the need of
+using command line arguments.
+
+A dotfile template can be found here: [.i3lock-slick.yml](.i3lock-slick.yml)
+
+The following dotfile paths are scanned in order:
+- `~/.config/i3lock-slick/config.yml`
+- `~/.i3lock-slick.yml`
+
 ## Requirements
 * `i3lock`: i3lock itself
 * `scrot`: screenshot tool
