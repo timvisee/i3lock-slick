@@ -9,6 +9,7 @@ mod img;
 mod intent;
 mod yaml_helper;
 
+use std::env;
 use std::path::{Path, PathBuf};
 use std::process::{Command, exit};
 
@@ -25,15 +26,35 @@ fn main() {
     // Create a configuration instance
     let mut config = Config::default();
 
-    // TODO: Don't use an absolute path here
-    // TODO: Properties aren't parsed
-    let path = Path::new("/home/timvisee/.config/i3lock-slick/config.yml");
-    if path.is_file() {
-        config.merge_file(path).unwrap();
-    }
-    let path = Path::new("/home/timvisee/.i3lock-slick.yml");
-    if path.is_file() {
-        config.merge_file(path).unwrap();
+    // List of paths to check for dotfiles at
+    let paths = vec![
+        "~/.config/i3lock-slick/config.yml",
+        "~/.i3lock-slick.yml",
+    ];
+
+    // Get the user's home directory path
+    let home_path = env::home_dir();
+
+    // Merge existing dotfiles
+    for mut path in paths.iter().map(|path| path.to_string()) {
+        // Parse the home directory tilde
+        match home_path.as_ref() {
+            Some(home_dir) => {
+                path = path.replacen(
+                    '~',
+                    &home_dir.to_str().unwrap_or(""),
+                    1
+                );
+            },
+            None => {},
+        }
+
+        // Get the file path, merge the file if it exists
+        let path = Path::new(&path);
+        if path.is_file() {
+            println!("Load settings: {:?}", path);
+            config.merge_file(path).unwrap();
+        }
     }
 
     // Parse arguments
