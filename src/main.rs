@@ -1,4 +1,5 @@
 extern crate clap;
+extern crate shellexpand;
 extern crate tempdir;
 
 mod app;
@@ -32,24 +33,16 @@ fn main() {
         "~/.i3lock-slick.yml",
     ];
 
-    // Get the user's home directory path
-    let home_path = env::home_dir();
-
     // Merge existing dotfiles
-    for mut path in paths.iter().map(|path| path.to_string()) {
-        // Parse the home directory tilde
-        match home_path.as_ref() {
-            Some(home_dir) => {
-                path = path.replacen(
-                    '~',
-                    &home_dir.to_str().unwrap_or(""),
-                    1
-                );
-            },
-            None => {},
-        }
+    for path in paths {
+        // Expand the path
+        let path = shellexpand::full_with_context_no_errors(
+            &path,
+            || env::home_dir(),
+            |var| env::var(var).ok(),
+        ).to_string();
 
-        // Get the file path, merge the file if it exists
+        // Get the path, load dotfile if it exists
         let path = Path::new(&path);
         if path.is_file() {
             println!("Load settings: {:?}", path);
