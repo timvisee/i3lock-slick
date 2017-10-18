@@ -138,7 +138,7 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
 
     println!("Bluring image...");
     let mut blur = Blur::new();
-    blur.set_property(blur::PROP_SIGMA, "3".into());
+    blur.set_property(blur::PROP_SIGMA, "7".into());
     edit = blur.process_safe(edit).unwrap();
 
     println!("Saving edited image...");
