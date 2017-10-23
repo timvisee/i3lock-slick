@@ -1,4 +1,6 @@
 extern crate clap;
+#[macro_use]
+extern crate lazy_static;
 extern crate shellexpand;
 extern crate tempdir;
 
@@ -80,6 +82,13 @@ fn parse_args<'a>() -> ArgMatches<'a> {
             .short("d")
             .long(cmd::ARG_DRY)
             .help("Don't invoke i3lock, output the command to stdout instead"))
+        .arg(Arg::with_name(cmd::ARG_FILTER)
+            .short("f")
+            .long(cmd::ARG_FILTER)
+            .value_name("FILTER")
+            .help("Filter to apply to the image")
+            .multiple(true)
+            .takes_value(true))
         .get_matches()
 }
 
@@ -138,7 +147,7 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
 
     println!("Bluring image...");
     let mut blur = Blur::new();
-    blur.set_property(blur::PROP_SIGMA, "7".into());
+    blur.set_property(blur::PROP_SIGMA, "7").unwrap();
     edit = blur.process_safe(edit).unwrap();
 
     println!("Saving edited image...");

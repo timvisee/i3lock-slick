@@ -3,37 +3,45 @@ use std::collections::HashMap;
 use err::Result;
 use img::ImgEdit;
 
-use super::ImgProc;
+use super::{ImgProc, Prop};
 
 // Property names
 pub static PROP_SIGMA: &'static str = "sigma";
 
+// Default properties
+lazy_static! {
+    static ref PROPERTIES: HashMap<&'static str, Prop> = {
+        let mut map = HashMap::new();
+        map.insert(PROP_SIGMA, Prop::Float(Some(5.0)));
+        map
+    };
+}
+
 /// Image blurring processor.
 pub struct Blur {
-    properties: HashMap<&'static str, String>
+    properties: HashMap<&'static str, Prop>
 }
 
 impl ImgProc for Blur {
     fn new() -> Self {
-        // Build the list with properties
-        let mut properties: HashMap<&'static str, String> = HashMap::new();
-        properties.insert(PROP_SIGMA, "3".into());
-
         Blur {
-            properties
+            properties: PROPERTIES.clone()
         }
     }
 
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         // TODO: Handle errors!
-        Ok(ImgEdit::from(img.into_img().blur(self.property(PROP_SIGMA).unwrap().parse().unwrap())))
+        Ok(ImgEdit::from(
+            img.into_img()
+                .blur(self.property(PROP_SIGMA).unwrap().as_float().unwrap())
+        ))
     }
 
-    fn properties<'a: 'b, 'b>(&'a self) -> &'b HashMap<&'static str, String> {
+    fn properties<'a: 'b, 'b>(&'a self) -> &'b HashMap<&'static str, Prop> {
         &self.properties
     }
 
-    fn mut_properties<'a: 'b, 'b>(&'a mut self) -> &'b mut HashMap<&'static str, String> {
+    fn mut_properties<'a: 'b, 'b>(&'a mut self) -> &'b mut HashMap<&'static str, Prop> {
         &mut self.properties
     }
 }
