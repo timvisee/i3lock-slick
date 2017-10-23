@@ -21,11 +21,15 @@ use tempdir::TempDir;
 
 use config::Config;
 use err::{Error, Result};
-use img::img_proc::{Blur, blur, ImgProc};
+use img::img_proc::{Blur, blur, ImgProc, ImgProcParser};
 use intent::Intent;
 
 /// Main application entry point.
 fn main() {
+    // TODO: Remove this after testing
+    // Image processor parser test
+    ImgProcParser::parse("blur:sigma=3").unwrap();
+
     // Create a configuration instance
     let mut config = Config::default();
 
