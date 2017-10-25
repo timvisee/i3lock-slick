@@ -7,9 +7,6 @@ use super::Prop;
 
 /// Image processor trait.
 pub trait ImgProc {
-    /// Constructor with defaults.
-    fn new() -> Self;
-
     /// Process the given image `img` in a safe way with the current processor.
     ///
     /// The given image is consumed, a new and edited image is returned on success.
@@ -60,7 +57,7 @@ pub trait ImgProc {
     ///
     /// Returns an error if the property wasn't found,
     /// or it the value couldn't be parsed because it was incompatible.
-    fn set_property<'a, T: AsRef<str>>(&mut self, name: &'static str, value: T) -> Result<'a, ()> {
+    fn set_property<'a>(&mut self, name: &str, value: &str) -> Result<'a, ()> {
         match self.mut_property(name) {
             Some(ref mut prop) => prop.parse(value.as_ref()),
             None => Err(Error::new("Tried to set unknown option on a filter")),

@@ -15,13 +15,15 @@ pub struct Invert {
     properties: HashMap<&'static str, Prop>
 }
 
-impl ImgProc for Invert {
-    fn new() -> Self {
+impl Invert {
+    pub fn new() -> Invert {
         Invert {
             properties: PROPERTIES.clone(),
         }
     }
+}
 
+impl ImgProc for Invert {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         // Get the dynamic image and invert
         let mut dyn_img = img.into_img();

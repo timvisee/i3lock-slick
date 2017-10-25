@@ -15,13 +15,15 @@ pub struct Grayscale {
     properties: HashMap<&'static str, Prop>
 }
 
-impl ImgProc for Grayscale {
-    fn new() -> Self {
+impl Grayscale {
+    pub fn new() -> Grayscale {
         Grayscale {
             properties: PROPERTIES.clone(),
         }
     }
+}
 
+impl ImgProc for Grayscale {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         Ok(ImgEdit::from(
             img.into_img().grayscale()

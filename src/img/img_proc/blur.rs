@@ -22,13 +22,15 @@ pub struct Blur {
     properties: HashMap<&'static str, Prop>
 }
 
-impl ImgProc for Blur {
-    fn new() -> Self {
+impl Blur {
+    pub fn new() -> Blur {
         Blur {
             properties: PROPERTIES.clone()
         }
     }
+}
 
+impl ImgProc for Blur {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         // TODO: Handle errors!
         Ok(ImgEdit::from(
