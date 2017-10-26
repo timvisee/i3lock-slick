@@ -81,7 +81,7 @@ impl ImgProcParser {
         }
 
         // Parse the filter and filter property strings, return the result
-        ImgProcParser::parse_test(filter_name, property_strings)
+        ImgProcParser::parse_parts(filter_name, property_strings)
     }
 
     /// Parse the filter with the given `name`, and set the given `properties` on it.
@@ -90,9 +90,9 @@ impl ImgProcParser {
     ///
     /// The properties are in `key`-`value` tuple format.
     /// Properties that are not known for the filter return an error.
-    pub fn parse_test<'a>(name: &str, properties: Vec<(&str, &str)>) -> Result<'a, Box<ImgProc>> {
+    pub fn parse_parts<'a>(name: &str, properties: Vec<(&str, &str)>) -> Result<'a, Box<ImgProc>> {
         // Parse the filter by it's name
-        let mut filter = ImgProcParser::parse_filter_by_name(name)?;
+        let mut filter = ImgProcParser::create_filter_by_name(name)?;
 
         // Apply each filter
         for (key, value) in properties {
@@ -102,12 +102,12 @@ impl ImgProcParser {
         Ok(filter)
     }
 
-    /// Get the filter by it's filter name.
+    /// Create a filter instance by the given filter `name`.
     ///
     /// If the name `blur` is given, a new instance of the image blur processor is returned.
     ///
     /// An error is returned if the filter name is unknown.
-    pub fn parse_filter_by_name<'a>(name: &str) -> Result<'a, Box<ImgProc>> {
+    pub fn create_filter_by_name<'a>(name: &str) -> Result<'a, Box<ImgProc>> {
         match name {
             "blur" => Ok(Box::new(Blur::new())),
             "greyscale" => Ok(Box::new(Grayscale::new())),
