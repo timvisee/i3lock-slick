@@ -17,14 +17,14 @@ impl ImgProcParser {
     /// Parse the filter form the given `filter` string.
     ///
     /// An error is returned if parsing failed.
-    pub fn parse(filter: &str) -> Result<Box<ImgProc>> {
+    pub fn parse<'a>(filter: String) -> Result<'a, Box<ImgProc>> {
         // Define regular expressions for the full filter syntax, and filter parameters
         let re_filter = Regex::new(r"^\s*([a-zA-Z]+)\s*(:[a-zA-Z0-9=,\.\s]*)?$").unwrap();
         let re_prop = Regex::new(r"^\s*([a-zA-Z]+)\s*=\s*([a-zA-Z0-9\.]*)\s*$").unwrap();
 
         // Get the filter components, skip the first super match
         let filter_matches = re_filter
-            .captures_iter(filter)
+            .captures_iter(filter.as_str())
             .next()
             .ok_or(Error::new("Incorrect filter format"))?;
         let mut filter_components = filter_matches.iter();

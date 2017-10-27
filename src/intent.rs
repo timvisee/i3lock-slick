@@ -7,6 +7,7 @@ use std::process::Command;
 use cmd;
 use config::Config;
 use err::{Error, Result};
+use img::img_proc::{ImgProc, ImgProcParser};
 
 /// Application intent, defining what this application instance is used for.
 ///
@@ -18,6 +19,9 @@ use err::{Error, Result};
 pub struct Intent {
     /// A list of commands to run.
     cmd: Vec<String>,
+
+    /// A list of filters to apply
+    filters: Vec<Box<ImgProc>>,
 }
 
 impl Intent {
@@ -25,11 +29,12 @@ impl Intent {
     pub fn new() -> Self {
         Intent {
             cmd: vec!["i3lock".into()],
+            filters: vec![],
         }
     }
 
     /// Construct the intent based on a given configuration.
-    pub fn from(config: &Config) -> Self {
+    pub fn from(config: &Config) -> Result<Self> {
         let mut intent = Self::new();
 
         // Get the current list of arguments or create a fresh one if non-existent
@@ -66,12 +71,29 @@ impl Intent {
             }
         }
 
-        intent
+        // Get the filters to apply
+        let cfg_filters = config.get_list(cmd::ARG_FILTER, vec![]);
+        for cfg_filter in cfg_filters {
+            // Get the filter as a string
+            let filter_str: &str = cfg_filter
+                .as_str()
+                .ok_or(Error::new("The filter could not be read as a string"))?;
+
+            // Parse the filter, put it in the list
+            intent.push_filter(ImgProcParser::parse(filter_str.to_string())?);
+        }
+
+        Ok(intent)
     }
 
     /// Put an additional argument into the intent.
     pub fn push_arg(&mut self, arg: String) {
         self.cmd.push(arg);
+    }
+
+    /// Put an additional filter into the intent.
+    pub fn push_filter(&mut self, filter: Box<ImgProc>) {
+        self.filters.push(filter);
     }
 
     /// Invoke i3lock with this intent.

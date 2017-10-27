@@ -28,7 +28,7 @@ use intent::Intent;
 fn main() {
     // TODO: Remove this after testing
     // Image processor parser test
-    ImgProcParser::parse("blur:sigma=3").unwrap();
+    ImgProcParser::parse("blur:sigma=3".into()).unwrap();
 
     // Create a configuration instance
     let mut config = Config::default();
@@ -101,7 +101,7 @@ fn parse_args<'a>() -> ArgMatches<'a> {
 /// If `matches` are given, all parameters will be parsed accordingly.
 fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
     // Create a program intent
-    let mut intent = Intent::from(config);
+    let mut intent = Intent::from(config)?;
 
     // Create a temporary directory
     let temp = TempDir::new(app::NAME)
