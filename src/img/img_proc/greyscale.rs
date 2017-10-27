@@ -11,19 +11,19 @@ lazy_static! {
 }
 
 /// Image gray scale processor.
-pub struct Grayscale {
+pub struct Greyscale {
     properties: HashMap<&'static str, Prop>
 }
 
-impl Grayscale {
-    pub fn new() -> Grayscale {
-        Grayscale {
+impl Greyscale {
+    pub fn new() -> Greyscale {
+        Greyscale {
             properties: PROPERTIES.clone(),
         }
     }
 }
 
-impl ImgProc for Grayscale {
+impl ImgProc for Greyscale {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         Ok(ImgEdit::from(
             img.into_img().grayscale()
