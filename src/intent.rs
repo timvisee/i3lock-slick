@@ -80,7 +80,7 @@ impl Intent {
                 .ok_or(Error::new("The filter could not be read as a string"))?;
 
             // Parse the filter, put it in the list
-            intent.push_filter(ImgProcParser::parse(filter_str.to_string())?);
+            intent.push_filter(ImgProcParser::parse(filter_str)?);
         }
 
         Ok(intent)
