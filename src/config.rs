@@ -207,6 +207,7 @@ impl Config {
     pub fn parse_matches(&mut self, matches: &ArgMatches) -> Result<()> {
         // TODO: Don't unwrap, but try! the result!
         self.parse_i3_params(matches).unwrap();
+        self.parse_filters(matches).unwrap();
 
         // Dry run
         if matches.is_present(cmd::ARG_DRY) {

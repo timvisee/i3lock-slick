@@ -107,7 +107,7 @@ impl ImgProcParser {
     /// If the name `blur` is given, a new instance of the image blur processor is returned.
     ///
     /// An error is returned if the filter name is unknown.
-    pub fn create_filter_by_name<'a>(name: &str) -> Result<'a, Box<ImgProc>> {
+    pub fn create_filter_by_name<'a: 'b, 'b>(name: &'b str) -> Result<'a, Box<ImgProc>> {
         match name {
             "blur" => Ok(Box::new(Blur::new())),
             "greyscale" => Ok(Box::new(Greyscale::new())),
