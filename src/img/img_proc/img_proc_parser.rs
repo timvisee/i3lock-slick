@@ -42,12 +42,10 @@ impl ImgProcParser {
         // Create a list of property strings
         let mut property_strings: Vec<(&str, &str)> = vec![];
 
-        // Get the filter properties
-        if let Some(component_properties) = filter_components.next() {
+        // Get the filter properties if there are any
+        if let Some(Some(component_properties)) = filter_components.next() {
             // Get the component properties, strip the colon
-            let component_properties = &component_properties
-                .ok_or(Error::new("TEST"))?
-                .as_str()[1..];
+            let component_properties = &component_properties.as_str()[1..];
 
             // Split the properties by the comma
             for component_property in component_properties.split(',') {
