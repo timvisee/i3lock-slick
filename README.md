@@ -40,6 +40,16 @@ cargo install
 
 Packages will be created at a later time.
 
+## Filters
+The following filters are currently available:
+
+- `blur`: blur the image
+    - `sigma=float`: blurring intensity as a `float`.
+- `brighten`: brighten the image by the given amount.
+    - `amount=int`: brightening amount as an `int`, negative for darkening.
+- `greyscale`: greyscale the image.
+- `invert`: invert the image colors.
+
 ## Dotfiles
 The tool has support for dotfiles,
 which may fully configure i3lock-slick as required and eliminates the need of
