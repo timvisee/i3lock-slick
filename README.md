@@ -22,6 +22,9 @@ i3lock-slick --version
 # Show the lock screen, use the defaults
 i3lock-slick
 
+# Show the lock screen, apply some filters
+i3lock-slick --filter blur:sigma=3 --filter greyscale
+
 # Show the lock screen, process i3lock parameters
 i3lock-slick -p color=ff0000 -p ignore-empty-password
 ```
