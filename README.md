@@ -22,6 +22,9 @@ i3lock-slick --version
 # Show the lock screen, use the defaults
 i3lock-slick
 
+# Show the lock screen, apply some filters
+i3lock-slick --filter blur:sigma=3 --filter greyscale
+
 # Show the lock screen, process i3lock parameters
 i3lock-slick -p color=ff0000 -p ignore-empty-password
 ```
@@ -36,6 +39,16 @@ cargo install
 ```
 
 Packages will be created at a later time.
+
+## Filters
+The following filters are currently available:
+
+- `blur`: blur the image
+    - `sigma=float`: blurring intensity as a `float`.
+- `brighten`: brighten the image by the given amount.
+    - `amount=int`: brightening amount as an `int`, negative for darkening.
+- `greyscale`: greyscale the image.
+- `invert`: invert the image colors.
 
 ## Dotfiles
 The tool has support for dotfiles,

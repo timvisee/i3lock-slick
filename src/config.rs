@@ -127,6 +127,30 @@ impl Config {
         }
     }
 
+    /// Get the list of Yaml values from the given `node`.
+    ///
+    /// If the property does not exist, `def` is returned.
+    pub fn get_list(&self, node: &str, def: Vec<Yaml>) -> Vec<Yaml> {
+        match self.get(node) {
+            Some(property) => {
+                // Get the vector
+                let vec: Option<&Vec<Yaml>> = property.as_vec();
+                if vec.is_none() {
+                    return def;
+                }
+
+                // Clone it into a new list
+                vec.unwrap().clone().into_iter().collect()
+            },
+            None => def,
+        }
+    }
+
+    /// Set a list of Yaml values in the configuration.
+    pub fn set_list(&mut self, node: &str, list: Vec<Yaml>) -> Result<()> {
+        self.set(node, Yaml::Array(list))
+    }
+
     /// Get a key value dictionary as `(String, String)` in a `HashMap` at the given `node`.
     ///
     /// The `def` value is returned if the given property was not found.
@@ -183,6 +207,7 @@ impl Config {
     pub fn parse_matches(&mut self, matches: &ArgMatches) -> Result<()> {
         // TODO: Don't unwrap, but try! the result!
         self.parse_i3_params(matches).unwrap();
+        self.parse_filters(matches).unwrap();
 
         // Dry run
         if matches.is_present(cmd::ARG_DRY) {
@@ -200,13 +225,13 @@ impl Config {
     /// Any errors may be returned if parsing failed.
     fn parse_i3_params(&mut self, matches: &ArgMatches) -> Result<()> {
         // Return early if there are no arguments to parse
-        let params = matches.values_of(cmd::ARG_PARAMS);
+        let params = matches.values_of(cmd::ARG_PARAM);
         if params.is_none() {
             return Ok(());
         }
 
         // Get the current list of arguments or create a fresh one if non-existent
-        let cfg_params = self.get_dict(cmd::ARG_PARAMS, BTreeMap::new());
+        let cfg_params = self.get_dict(cmd::ARG_PARAM, BTreeMap::new());
         if cfg_params.is_err() {
             return Err(cfg_params.unwrap_err());
         }
@@ -231,6 +256,31 @@ impl Config {
         }
 
         // Set the properties in the configuration
-        self.set_dict(cmd::ARG_PARAMS, cfg_params)
+        self.set_dict(cmd::ARG_PARAM, cfg_params)
+    }
+
+    /// Parse filters from the command line.
+    ///
+    /// The configuration is modified directly with the parsed arguments,
+    /// and nothing is returned on success.
+    ///
+    /// Any errors may be returned if parsing failed.
+    fn parse_filters(&mut self, matches: &ArgMatches) -> Result<()> {
+        // Return early if there are no arguments to parse
+        let filters = matches.values_of(cmd::ARG_FILTER);
+        if filters.is_none() {
+            return Ok(());
+        }
+
+        // Get the current list of arguments or create a fresh one if non-existent
+        let mut cfg_filters = self.get_list(cmd::ARG_FILTER, vec![]);
+
+        // Put all filters in the list
+        filters.unwrap().for_each(|filter| cfg_filters.push(
+            Yaml::String(filter.to_string())
+        ));
+
+        // Set the properties in the configuration
+        self.set_list(cmd::ARG_FILTER, cfg_filters)
     }
 }

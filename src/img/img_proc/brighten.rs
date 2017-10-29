@@ -6,36 +6,36 @@ use img::ImgEdit;
 use super::{ImgProc, Prop};
 
 // Property names
-pub static PROP_SIGMA: &'static str = "sigma";
+pub static PROP_AMOUNT: &'static str = "amount";
 
 // Default properties
 lazy_static! {
     static ref PROPERTIES: HashMap<&'static str, Prop> = {
         let mut map = HashMap::new();
-        map.insert(PROP_SIGMA, Prop::Float(Some(5.0)));
+        map.insert(PROP_AMOUNT, Prop::Int(None));
         map
     };
 }
 
-/// Image blurring processor.
-pub struct Blur {
+/// Image brighten processor.
+pub struct Brighten {
     properties: HashMap<&'static str, Prop>
 }
 
-impl Blur {
-    pub fn new() -> Blur {
-        Blur {
+impl Brighten {
+    pub fn new() -> Brighten {
+        Brighten {
             properties: PROPERTIES.clone()
         }
     }
 }
 
-impl ImgProc for Blur {
+impl ImgProc for Brighten {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         // TODO: Handle errors!
         Ok(ImgEdit::from(
             img.into_img()
-                .blur(self.property(PROP_SIGMA).unwrap().as_float().unwrap())
+                .brighten(self.property(PROP_AMOUNT).unwrap().as_int().unwrap())
         ))
     }
 

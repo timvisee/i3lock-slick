@@ -4,7 +4,7 @@ extern crate yaml_rust;
 use std;
 use std::convert::From;
 use std::fmt::{Display, Formatter};
-use std::num::ParseFloatError;
+use std::num::{ParseFloatError, ParseIntError};
 use std::sync::{PoisonError, RwLockReadGuard, RwLockWriteGuard};
 
 use app;
@@ -97,6 +97,14 @@ impl<'a> From<std::io::Error> for Error<'a> {
 //        use std::error::Error;
 //        super::Error::new(err.description())
         Error::new("IO operation failed")
+    }
+}
+
+impl<'a> From<ParseIntError> for Error<'a> {
+    fn from(_: ParseIntError) -> Self {
+        //        use std::error::Error;
+        //        super::Error::new(err.description())
+        Error::new("Unable to parse float value")
     }
 }
 
