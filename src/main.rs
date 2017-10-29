@@ -21,7 +21,7 @@ use tempdir::TempDir;
 
 use config::Config;
 use err::{Error, Result};
-use img::img_proc::{Blur, blur, ImgProc, ImgProcParser};
+use img::img_proc::{ImgProc, ImgProcParser};
 use intent::Intent;
 
 /// Main application entry point.
@@ -108,7 +108,7 @@ fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
         .expect("Failed to create temporary directory");
 
     // Create a screenshot
-    let screenshot = screenshot(&temp);
+    let screenshot = screenshot(&temp, config);
 
     // Configure to use the screenshot as lock image
     match screenshot {
@@ -133,7 +133,7 @@ fn lock<'a>(config: &'a mut Config) -> Result<'a, ()> {
 /// Take a screenshot and save in the given temporary directory.
 ///
 /// Returns a `Path` which references the saved screenshot.
-fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
+fn screenshot<'a>(tempdir: &TempDir, config: &Config) -> Result<'a, PathBuf> {
     // Determine the file path for the screenshot
     let file = tempdir.path().join("i3lock-image.png");
 
@@ -149,10 +149,26 @@ fn screenshot<'a>(tempdir: &TempDir) -> Result<'a, PathBuf> {
     let img = img::Img::new(&file);
     let mut edit = img.edit().unwrap();
 
-    println!("Bluring image...");
-    let mut blur = Blur::new();
-    blur.set_property(blur::PROP_SIGMA, "7").unwrap();
-    edit = blur.process_safe(edit).unwrap();
+    // Get the filters to apply
+    let cfg_filters = config.get_list(cmd::ARG_FILTER, vec![]);
+    let mut filters: Vec<Box<ImgProc>> = Vec::with_capacity(cfg_filters.len());
+
+    // Parse the configuration filters
+    for cfg_filter in cfg_filters {
+        // Get the filter as a string
+        let filter_str: &str = cfg_filter
+            .as_str()
+            .ok_or(Error::new("The filter could not be read as a string"))?;
+
+        // Parse the filter, put it in the list
+        filters.push(ImgProcParser::parse(filter_str)?);
+    }
+
+    // Apply the filters
+    for filter in filters {
+        println!("Applying filter...");
+        edit = filter.process_safe(edit).unwrap();
+    }
 
     println!("Saving edited image...");
     if let Err(_) = edit.save(&img) {
