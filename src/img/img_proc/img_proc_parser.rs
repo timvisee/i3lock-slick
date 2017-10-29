@@ -1,6 +1,6 @@
 extern crate regex;
 
-use super::{Blur, Greyscale, ImgProc, Invert};
+use super::{Blur, Brighten, Greyscale, ImgProc, Invert};
 
 use self::regex::Regex;
 
@@ -108,6 +108,7 @@ impl ImgProcParser {
     pub fn create_filter_by_name<'a: 'b, 'b>(name: &'b str) -> Result<'a, Box<ImgProc>> {
         match name {
             "blur" => Ok(Box::new(Blur::new())),
+            "brighten" => Ok(Box::new(Brighten::new())),
             "greyscale" => Ok(Box::new(Greyscale::new())),
             "invert" => Ok(Box::new(Invert::new())),
             _ => Err(Error::new("Unknown filter name")),
