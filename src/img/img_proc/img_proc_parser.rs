@@ -19,8 +19,8 @@ impl ImgProcParser {
     /// An error is returned if parsing failed.
     pub fn parse<'a: 'b, 'b>(filter: &'b str) -> Result<'a, Box<ImgProc>> {
         // Define regular expressions for the full filter syntax, and filter parameters
-        let re_filter = Regex::new(r"^\s*([a-zA-Z]+)\s*(:[a-zA-Z0-9=,\.\s]*)?$").unwrap();
-        let re_prop = Regex::new(r"^\s*([a-zA-Z]+)\s*=\s*([a-zA-Z0-9\.]*)\s*$").unwrap();
+        let re_filter = Regex::new(r"^\s*([a-zA-Z]+)\s*(:[a-zA-Z0-9=,\.\-\s]*)?$").unwrap();
+        let re_prop = Regex::new(r"^\s*([a-zA-Z]+)\s*=\s*([a-zA-Z0-9\.\-]*)\s*$").unwrap();
 
         // Get the filter components, skip the first super match
         let filter_matches = re_filter
