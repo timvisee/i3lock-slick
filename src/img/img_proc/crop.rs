@@ -15,7 +15,10 @@ pub static PROP_HEIGHT: &'static str = "height";
 lazy_static! {
     static ref PROPERTIES: HashMap<&'static str, Prop> = {
         let mut map = HashMap::new();
-        map.insert(PROP_AMOUNT, Prop::Int(None));
+        map.insert(PROP_X, Prop::UInt(None));
+        map.insert(PROP_Y, Prop::UInt(None));
+        map.insert(PROP_WIDTH, Prop::UInt(None));
+        map.insert(PROP_HEIGHT, Prop::UInt(None));
         map
     };
 }
@@ -39,10 +42,10 @@ impl ImgProc for Crop {
         Ok(ImgEdit::from(
             img.into_img()
                 .crop(
-                    self.property(PROP_X).unwrap().as_int().unwrap(),
-                    self.property(PROP_Y).unwrap().as_int().unwrap(),
-                    self.property(PROP_WIDTH).unwrap().as_int().unwrap(),
-                    self.property(PROP_HEIGHT).unwrap().as_int().unwrap(),
+                    self.property(PROP_X).unwrap().as_uint().unwrap(),
+                    self.property(PROP_Y).unwrap().as_uint().unwrap(),
+                    self.property(PROP_WIDTH).unwrap().as_uint().unwrap(),
+                    self.property(PROP_HEIGHT).unwrap().as_uint().unwrap(),
                 )
         ))
     }

@@ -12,7 +12,7 @@ pub static PROP_AMOUNT: &'static str = "amount";
 lazy_static! {
     static ref PROPERTIES: HashMap<&'static str, Prop> = {
         let mut map = HashMap::new();
-        map.insert(PROP_AMOUNT, Prop::Int(None));
+        map.insert(PROP_AMOUNT, Prop::Float(None));
         map
     };
 }
@@ -35,7 +35,7 @@ impl ImgProc for Contrast {
         // TODO: Handle errors!
         Ok(ImgEdit::from(
             img.into_img()
-                .adjust_contrast(self.property(PROP_AMOUNT).unwrap().as_int().unwrap())
+                .adjust_contrast(self.property(PROP_AMOUNT).unwrap().as_float().unwrap())
         ))
     }
 
