@@ -11,6 +11,9 @@ pub mod img_proc_parser;
 pub mod invert;
 pub mod prop;
 pub mod resize;
+pub mod rotate90;
+pub mod rotate180;
+pub mod rotate270;
 pub mod unsharpen;
 
 // Reexport modules
@@ -27,4 +30,7 @@ pub use self::img_proc_parser::ImgProcParser;
 pub use self::invert::Invert;
 pub use self::prop::Prop;
 pub use self::resize::Resize;
+pub use self::rotate90::Rotate90;
+pub use self::rotate180::Rotate180;
+pub use self::rotate270::Rotate270;
 pub use self::unsharpen::Unsharpen;

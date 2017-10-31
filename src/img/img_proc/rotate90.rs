@@ -10,24 +10,24 @@ lazy_static! {
     static ref PROPERTIES: HashMap<&'static str, Prop> = HashMap::new();
 }
 
-/// Image invert processor.
-pub struct Invert {
+/// Image 90 degrees rotate processor.
+pub struct Rotate90 {
     properties: HashMap<&'static str, Prop>
 }
 
-impl Invert {
-    pub fn new() -> Invert {
-        Invert {
+impl Rotate90 {
+    pub fn new() -> Rotate90 {
+        Rotate90 {
             properties: PROPERTIES.clone(),
         }
     }
 }
 
-impl ImgProc for Invert {
+impl ImgProc for Rotate90 {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
-        // Get the dynamic image and invert
+        // Get the dynamic image and rotate
         let mut dyn_img = img.into_img();
-        dyn_img.invert();
+        dyn_img.rotate90();
 
         Ok(ImgEdit::from(dyn_img))
     }

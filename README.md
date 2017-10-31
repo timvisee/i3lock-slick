@@ -76,6 +76,9 @@ The following filters are currently available:
         - `catmullrom`: cubic filter.
         - `gaussian`: gaussian filter.
         - `lanczos3`: lanczos filter with window 3.
+- `rotate90`: rotate the image by 90 degrees.
+- `rotate180`: rotate the image by 180 degrees.
+- `rotate270`: rotate the image by 270 degrees.
 - `unsharpen`: performs an unsharpen mask on this image.
     - `sigma=float`: the amount to blur the image by.
     - `threshold=int`: control of how much to sharpen.
