@@ -117,6 +117,7 @@ impl ImgProcParser {
             "huerotate" => Ok(Box::new(HueRotate::new())),
             "invert" => Ok(Box::new(Invert::new())),
             "resize" => Ok(Box::new(Resize::new())),
+            "unsharpen" => Ok(Box::new(Unsharpen::new())),
             _ => Err(Error::new("Unknown filter name")),
         }
     }

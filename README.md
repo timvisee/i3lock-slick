@@ -44,7 +44,7 @@ Packages will be created at a later time.
 The following filters are currently available:
 
 - `blur`: blur the image
-    - `sigma=float`: blurring intensity as a `float`.
+    - `sigma=float`: (default: 5) blurring intensity as a `float`.
 - `brighten`: brighten the image by the given amount.
     - `amount=int`: brightening amount as an `int`, negative for darkening.
 - `contrast`: change the image contrast.
@@ -76,6 +76,9 @@ The following filters are currently available:
         - `catmullrom`: cubic filter.
         - `gaussian`: gaussian filter.
         - `lanczos3`: lanczos filter with window 3.
+- `unsharpen`: performs an unsharpen mask on this image.
+    - `sigma=float`: the amount to blur the image by.
+    - `threshold=int`: control of how much to sharpen.
 
 ## Dotfiles
 The tool has support for dotfiles,
