@@ -111,6 +111,8 @@ impl ImgProcParser {
             "brighten" => Ok(Box::new(Brighten::new())),
             "contrast" => Ok(Box::new(Contrast::new())),
             "crop" => Ok(Box::new(Crop::new())),
+            "fliph" => Ok(Box::new(FlipH::new())),
+            "flipv" => Ok(Box::new(FlipV::new())),
             "greyscale" => Ok(Box::new(Greyscale::new())),
             "huerotate" => Ok(Box::new(HueRotate::new())),
             "invert" => Ok(Box::new(Invert::new())),

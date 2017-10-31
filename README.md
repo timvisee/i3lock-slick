@@ -56,6 +56,8 @@ The following filters are currently available:
     - `y=int`: top-left y coordinate of the rectangle in pixels.
     - `width=int`: width of the rectangle in pixels.
     - `height=int`: height of the rectangle in pixels.
+- `fliph`: flip the image horizontally.
+- `flipv`: flip the image vertically.
 - `greyscale`: greyscale the image.
 - `huerotate`: hue rotate the image.
     - `amount=int`: hue rotate the supplied image.

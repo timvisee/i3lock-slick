@@ -10,23 +10,23 @@ lazy_static! {
     static ref PROPERTIES: HashMap<&'static str, Prop> = HashMap::new();
 }
 
-/// Image greyscale processor.
-pub struct Greyscale {
+/// Image horizontal flip processor.
+pub struct FlipH {
     properties: HashMap<&'static str, Prop>
 }
 
-impl Greyscale {
-    pub fn new() -> Greyscale {
-        Greyscale {
+impl FlipH {
+    pub fn new() -> FlipH {
+        FlipH {
             properties: PROPERTIES.clone(),
         }
     }
 }
 
-impl ImgProc for Greyscale {
+impl ImgProc for FlipH {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         Ok(ImgEdit::from(
-            img.into_img().grayscale()
+            img.into_img().fliph()
         ))
     }
 
