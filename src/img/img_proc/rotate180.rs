@@ -25,11 +25,9 @@ impl Rotate180 {
 
 impl ImgProc for Rotate180 {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
-        // Get the dynamic image and rotate
-        let mut dyn_img = img.into_img();
-        dyn_img.rotate180();
-
-        Ok(ImgEdit::from(dyn_img))
+        Ok(ImgEdit::from(
+            img.into_img().rotate180()
+        ))
     }
 
     fn properties<'a: 'b, 'b>(&'a self) -> &'b HashMap<&'static str, Prop> {
