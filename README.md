@@ -64,6 +64,18 @@ The following filters are currently available:
         The `amount` is how much degrees to rotate each pixel by.
         0 and 360 do nothing, the rest rotates by the given degree value.
 - `invert`: invert the image colors.
+- `resize`: resize the image.
+    - `width=uint`: the new width in pixels.
+    - `height=uint`: the new height in pixels.
+    - `ratio=bool`: `false` (default) resize to the exact new dimensions.
+        `true` to keep the aspect ratio, which makes the image fit in the given dimensions.
+    - `filter=string`: image filter to use for resizing.
+        May be one of:
+        - `nearest`: nearest neighbour filter.
+        - `trinagle`: (default) linear filter.
+        - `catmullrom`: cubic filter.
+        - `gaussian`: gaussian filter.
+        - `lanczos3`: lanczos filter with window 3.
 
 ## Dotfiles
 The tool has support for dotfiles,
