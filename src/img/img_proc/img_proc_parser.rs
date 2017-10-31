@@ -106,7 +106,7 @@ impl ImgProcParser {
     ///
     /// An error is returned if the filter name is unknown.
     pub fn create_filter_by_name<'a: 'b, 'b>(name: &'b str) -> Result<'a, Box<ImgProc>> {
-        match name.trim().to_lowercase() {
+        match name.trim().to_lowercase().as_str() {
             "blur" => Ok(Box::new(Blur::new())),
             "brighten" => Ok(Box::new(Brighten::new())),
             "contrast" => Ok(Box::new(Contrast::new())),

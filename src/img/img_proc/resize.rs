@@ -29,7 +29,7 @@ lazy_static! {
         map.insert(PROP_WIDTH, Prop::UInt(None));
         map.insert(PROP_HEIGHT, Prop::UInt(None));
         map.insert(PROP_RATIO, Prop::Bool(Some(false)));
-        map.insert(PROP_FILTER, Prop::String(Some(FILTER_TRIANGLE)));
+        map.insert(PROP_FILTER, Prop::String(Some(FILTER_TRIANGLE.into())));
         map
     };
 }
@@ -51,14 +51,24 @@ impl Resize {
     /// The filter name is case-insensitive and is trimmed.
     ///
     /// If the filter name was unknown, an error is returned.
-    pub fn parse_filter(filter: &str) -> Result<FilterType> {
-        match filter.trim().to_lowercase() {
-            FILTER_NEAREST | FILTER_NEAREST_SHORT => Some(FilterType::Nearest),
-            FILTER_TRIANGLE => Some(FilterType::Triangle),
-            FILTER_CATMULLROM => Some(FilterType::CatmullRom),
-            FILTER_GAUSSIAN => Some(FilterType::Gaussian),
-            FILTER_LANCZOS3 => Some(FilterType::Lanczos3),
-            _ => Err(Error::new("Unknown filter name.")),
+    pub fn parse_filter<'a: 'b, 'b>(filter: &'b str) -> Result<'a, FilterType> {
+        // Normalize the filter name
+        let filter = filter.trim().to_lowercase();
+
+        // Return the proper filter
+        if &filter == FILTER_NEAREST || &filter == FILTER_NEAREST_SHORT {
+            Ok(FilterType::Nearest)
+        } else if &filter == FILTER_TRIANGLE {
+            Ok(FilterType::Triangle)
+        } else if &filter == FILTER_CATMULLROM {
+            Ok(FilterType::CatmullRom)
+        } else if &filter == FILTER_GAUSSIAN {
+            Ok(FilterType::Gaussian)
+        } else if &filter == FILTER_LANCZOS3 {
+            Ok(FilterType::Lanczos3)
+        } else {
+            // No filter found, return an error
+            Err(Error::new("Unknown filter name."))
         }
     }
 }
@@ -67,7 +77,7 @@ impl ImgProc for Resize {
     fn process(&self, img: ImgEdit) -> Result<ImgEdit> {
         // Parse the filter to use
         let filter_name = self.property(PROP_FILTER).unwrap().as_str().unwrap();
-        let filter = Resize::parse_filter(filter_name)?;
+        let filter = Resize::parse_filter(&filter_name)?;
 
         // Parse the width and height properties
         let width = self.property(PROP_WIDTH).unwrap().as_uint().unwrap();
@@ -75,7 +85,7 @@ impl ImgProc for Resize {
 
         // TODO: Handle errors!
         Ok(ImgEdit::from(
-            if self.prototype(PROP_RATIO).unwrap().as_bool().unwrap() {
+            if self.property(PROP_RATIO).unwrap().as_bool().unwrap() {
                 img.into_img()
                     .resize(width, height, filter)
             } else {

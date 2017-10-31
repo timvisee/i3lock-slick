@@ -13,6 +13,9 @@ pub enum Prop {
 
     /// A boolean value.
     Bool(Option<bool>),
+
+    /// A string value.
+    String(Option<String>),
 }
 
 impl Prop {
@@ -33,9 +36,13 @@ impl Prop {
                 *x = Some(value.parse::<f32>()?);
             }
 
-            // TODO: Parse a boolean
+            // TODO: parse a boolean value
             Prop::Bool(ref mut x) => {
-                *x = Some(value.parse::<bool>()?);
+                *x = Some(value.parse::<bool>().unwrap_or(false));
+            },
+
+            Prop::String(ref mut x) => {
+                *x = Some(value.to_string());
             },
         }
 
@@ -49,6 +56,7 @@ impl Prop {
             Prop::UInt(x) => x.is_none(),
             Prop::Float(x) => x.is_none(),
             Prop::Bool(x) => x.is_none(),
+            Prop::String(ref x) => x.clone().map(|x| x.is_empty()).unwrap_or(true),
         }
     }
 
@@ -56,19 +64,25 @@ impl Prop {
     pub fn as_int(&self) -> Option<i32> {
         match *self {
             Prop::Int(x) => x,
-            Prop::Uint(x) => x.map(|x| x as i32),
+            Prop::UInt(x) => x.map(|x| x as i32),
             Prop::Float(x) => x.map(|x| x as i32),
-            Prop::Bool(x) => x.map(|x| if x { 1 } else { 0 })
+            Prop::Bool(x) => x.map(|x| if x { 1 } else { 0 }),
+            Prop::String(ref x) => x.clone()
+                .map(|x| x.parse::<i32>().ok())
+                .unwrap_or(None),
         }
     }
 
     /// Get the property as unsigned integer.
     pub fn as_uint(&self) -> Option<u32> {
         match *self {
-            Prop::Int(x) => x.map(|x| x as u32)
-            Prop::Uint(x) => x,
+            Prop::Int(x) => x.map(|x| x as u32),
+            Prop::UInt(x) => x,
             Prop::Float(x) => x.map(|x| x as u32),
-            Prop::Bool(x) => x.map(|x| if x { 1 } else { 0 })
+            Prop::Bool(x) => x.map(|x| if x { 1 } else { 0 }),
+            Prop::String(ref x) => x.clone()
+                .map(|x| x.parse::<u32>().ok())
+                .unwrap_or(None),
         }
     }
 
@@ -79,6 +93,9 @@ impl Prop {
             Prop::UInt(x) => x.map(|x| x as f32),
             Prop::Float(x) => x,
             Prop::Bool(x) => x.map(|x| if x { 1f32 } else { 0f32 }),
+            Prop::String(ref x) => x.clone()
+                .map(|x| x.parse::<f32>().ok())
+                .unwrap_or(None),
         }
     }
 
@@ -87,8 +104,25 @@ impl Prop {
         match *self {
             Prop::Int(x) => x.map(|x| x != 0),
             Prop::UInt(x) => x.map(|x| x != 0),
-            Prop::Float(x) => x.map(|x| x != 0),
+            Prop::Float(x) => x.map(|x| x != 0f32),
             Prop::Bool(x) => x,
+
+            // TODO: parse a boolean value
+            Prop::String(ref x) => x.clone()
+                .map(|x| x.parse::<bool>().ok())
+                .unwrap_or(None),
+        }
+
+    }
+
+    /// Get the property as string.
+    pub fn as_str(&self) -> Option<String> {
+        match *self {
+            Prop::Int(x) => x.map(|x| x.to_string()),
+            Prop::UInt(x) => x.map(|x| x.to_string()),
+            Prop::Float(x) => x.map(|x| x.to_string()),
+            Prop::Bool(x) => x.map(|x| if x { "true" } else { "false" }).map(|x| x.into()),
+            Prop::String(ref x) => x.clone(),
         }
     }
 }

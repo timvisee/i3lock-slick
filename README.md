@@ -71,7 +71,7 @@ The following filters are currently available:
         `true` to keep the aspect ratio, which makes the image fit in the given dimensions.
     - `filter=string`: image filter to use for resizing.
         May be one of:
-        - `nearest`: nearest neighbour filter.
+        - `nearest` | `near`: nearest neighbour filter.
         - `trinagle`: (default) linear filter.
         - `catmullrom`: cubic filter.
         - `gaussian`: gaussian filter.
