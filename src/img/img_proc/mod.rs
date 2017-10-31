@@ -1,6 +1,7 @@
 pub mod blur;
 pub mod brighten;
 pub mod greyscale;
+pub mod huerotate;
 pub mod img_proc;
 pub mod img_proc_parser;
 pub mod invert;
@@ -10,6 +11,7 @@ pub mod prop;
 pub use self::blur::Blur;
 pub use self::brighten::Brighten;
 pub use self::greyscale::Greyscale;
+pub use self::huerotate::HueRotate;
 pub use self::img_proc::ImgProc;
 pub use self::img_proc_parser::ImgProcParser;
 pub use self::invert::Invert;

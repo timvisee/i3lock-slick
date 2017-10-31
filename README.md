@@ -48,6 +48,10 @@ The following filters are currently available:
 - `brighten`: brighten the image by the given amount.
     - `amount=int`: brightening amount as an `int`, negative for darkening.
 - `greyscale`: greyscale the image.
+- `huerotate`: hue rotate the image.
+    - `amount=int`: hue rotate the supplied image.
+        The amount is the degrees to rotate each pixel by.
+        0 and 360 do nothing, the rest rotates by the given degree value.
 - `invert`: invert the image colors.
 
 ## Dotfiles
