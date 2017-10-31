@@ -47,10 +47,14 @@ The following filters are currently available:
     - `sigma=float`: blurring intensity as a `float`.
 - `brighten`: brighten the image by the given amount.
     - `amount=int`: brightening amount as an `int`, negative for darkening.
+- `contrast`: change the image contrast.
+    - `amount=int`: adjust the contrast of this image.
+        Use `amount` to adjust the contrast by.
+        Negative values decrease the contrast and positive values increase the contrast.
 - `greyscale`: greyscale the image.
 - `huerotate`: hue rotate the image.
     - `amount=int`: hue rotate the supplied image.
-        The amount is the degrees to rotate each pixel by.
+        The `amount` is how much degrees to rotate each pixel by.
         0 and 360 do nothing, the rest rotates by the given degree value.
 - `invert`: invert the image colors.
 

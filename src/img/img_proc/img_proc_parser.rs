@@ -1,6 +1,6 @@
 extern crate regex;
 
-use super::{Blur, Brighten, Greyscale, HueRotate, ImgProc, Invert};
+use super::*;
 
 use self::regex::Regex;
 
@@ -109,6 +109,7 @@ impl ImgProcParser {
         match name.trim().to_lowercase() {
             "blur" => Ok(Box::new(Blur::new())),
             "brighten" => Ok(Box::new(Brighten::new())),
+            "contrast" => Ok(Box::new(Contrast::new())),
             "greyscale" => Ok(Box::new(Greyscale::new())),
             "huerotate" => Ok(Box::new(HueRotate::new())),
             "invert" => Ok(Box::new(Invert::new())),
