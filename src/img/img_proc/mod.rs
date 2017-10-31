@@ -1,6 +1,7 @@
 pub mod blur;
 pub mod brighten;
 pub mod contrast;
+pub mod crop;
 pub mod greyscale;
 pub mod huerotate;
 pub mod img_proc;
@@ -12,6 +13,7 @@ pub mod prop;
 pub use self::blur::Blur;
 pub use self::brighten::Brighten;
 pub use self::contrast::Contrast;
+pub use self::crop::Crop;
 pub use self::greyscale::Greyscale;
 pub use self::huerotate::HueRotate;
 pub use self::img_proc::ImgProc;

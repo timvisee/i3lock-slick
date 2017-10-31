@@ -51,6 +51,11 @@ The following filters are currently available:
     - `amount=int`: adjust the contrast of this image.
         Use `amount` to adjust the contrast by.
         Negative values decrease the contrast and positive values increase the contrast.
+- `crop`: cut out the image by the bounding rectangle.
+    - `x=int`: top-left x coordinate of the rectangle in pixels.
+    - `y=int`: top-left y coordinate of the rectangle in pixels.
+    - `width=int`: width of the rectangle in pixels.
+    - `height=int`: height of the rectangle in pixels.
 - `greyscale`: greyscale the image.
 - `huerotate`: hue rotate the image.
     - `amount=int`: hue rotate the supplied image.
