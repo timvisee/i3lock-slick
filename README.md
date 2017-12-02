@@ -10,8 +10,7 @@ This tool makes things like a blurred desktop as background in `i3lock` very eas
 along with many other styles.
 
 Invoking `i3lock-slick` parses all given arguments and immediately spawns the lock screen accordingly with the proper configuration,
-unless a parameters changes this behaviour.
-This makes invoking and styling `i3lock` with a single command a piece of cake.
+unless a parameters changes this behaviour.  This makes invoking and styling `i3lock` with a single command a piece of cake.
 
 ## Usage
 ```
@@ -95,7 +94,8 @@ The following dotfile paths are scanned in order:
 - `~/.i3lock-slick.yml`
 
 ## Requirements
-* `i3lock`: i3lock itself
+* Rust 1.20 or higher (with cargo)
+* `i3lock-color`: a modified version of i3lock
 * `scrot`: screenshot tool
 
 ## License
